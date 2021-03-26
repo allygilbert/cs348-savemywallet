@@ -42,4 +42,3 @@ def create_app(test_config=None):
     #   return render_template('results.html')
     return app
 app = create_app()
-
