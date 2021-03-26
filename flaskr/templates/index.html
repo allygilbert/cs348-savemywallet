@@ -1,0 +1,24 @@
+<html>
+
+<head>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js" integrity="sha256-8WqyJLuWKRBVhxXIL1jBDD7SDxU936oZkCnxQbWwJVw=" crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='script.js')}}"></script>
+</head>
+<body>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    <h1>Add user</h1>
+    <h3>Name</h3>
+    <form action="" method="post" name="addNewUser">
+    <input type="text" name="name"placeholder="John Doe">
+    <h3>Monthly budget (in $)</h3>
+    <input type="number" name="monthly_budget" placeholder="10">
+    <input type="submit">
+    </form>
+
+
+</body>
+
+</html>
