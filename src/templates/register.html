@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title> register </title>
+        <link rel="stylesheet" href="../static/style.css">	
+    </head>
+    <body>
+        <div class="registercontent" align="center">
+            <div class="registertop">
+                <h1>Register</h1>
+	    </div></br></br>
+	    <div class="registerbottom">
+	         <form action="{{ url_for('register')}}" method="post" autocomplete="off">
+	    <div class="msg">{{ msg }}</div>
+	    <input type="text" name="username" placeholder="Enter Your Username" class="textbox" id="username" required></br></br>
+            <input type="text" name="monthlybudget" placeholder="Enter Your Monthly Budget" class="textbox" id="monthlybudget" required></br></br>
+            <input type="submit" class="btn" value="Register">
+	    </div>
+        </div>
+    </body>
+</html>
