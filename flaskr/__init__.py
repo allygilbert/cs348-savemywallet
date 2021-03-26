@@ -3,6 +3,8 @@ import os
 from flask import Flask
 from flask import render_template,redirect, url_for,request
 from flask import make_response
+from app import printUsers
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -34,6 +36,8 @@ def create_app(test_config=None):
             monthlybudget= request.form.get('monthly_budget')
             message="User added to the database"
         return render_template('index.html', message=message)
-
+    @app.route('/results.html')
+    def results():
+        return render_template('results.html')
     return app
 
