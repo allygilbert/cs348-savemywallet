@@ -4,6 +4,10 @@ from flask import Flask
 from flask import render_template,redirect, url_for,request
 from flask import make_response
 
+import mysql.connector
+from mysql.connector import Error
+from addUser import addUser 
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -27,18 +31,19 @@ def create_app(test_config=None):
         pass
 
     # a simple page that says hello
-    @app.route('/index.html')
+    @app.route('/index.html', methods=['GET','POST'])
     def index():
-        message = ''
-        if request.method == 'POST':
-            name = request.form.get('name')  # access the data inside 
-            monthlybudget= request.form.get('monthly_budget')
-            message="User added to the database"
-            print("name: " + name)
-            print("monthlybudget: " + monthly_budget)
+        name = request.form.get('name') 
+        user_id = request.form.get('id')    # access the data inside 
+        monthlybudget= request.form.get('monthly_budget')
+        message="User added to the database"
+        print( name)
+        print(user_id)
+        print(monthlybudget)
+        addUser(user_id, name, monthlybudget)
         return render_template('index.html', message=message)
     @app.route('/results.html')
-    #def results():
-    #   return render_template('results.html')
+    def results():
+       return render_template('results.html')
     return app
 app = create_app()
