@@ -3,26 +3,26 @@
 .registercontent{
 	margin: 0 auto;
 	height: 720px;
-	width: 400px;
-	background-color: #e6ffee;
+	width: 100%;
+	background-color: #ffffff;
 	border-radius: 10px;
 }
 
 .registertop{
 	height: 60px;
-	width: 400px;
-	background-color: #009933;
+	width: 100%;
+	background-color: #03989e;
 	color: #ffffff;
 }
 
 .textbox{
 	padding: 10px 40px;
-	background-color: #009933;
+	background-color: #ffffff;
 	border-radius: 10px;
 }
 
 ::placeholder {
-	color: #FFFFFF;
+	color: #03989e;
 	opacity: 1;
 	font-style: oblique;
 	font-weight: bold;
@@ -30,7 +30,7 @@
 
 .btn {
 	padding: 10px 40px;
-	background-color: #009933;
+	background-color: #03989e;
 	color: #FFFFFF;
 	font-style: oblique;
 	font-weight: bold;
@@ -38,7 +38,7 @@
 }
 
 .worddark{
-	color: #009933;
+	color: #03989e;
 	font-style: oblique;
 	font-weight: bold;
 }
@@ -66,7 +66,7 @@
 .one .two{
 	width: 225px;
 	height: 100%;
-	background: #009933;
+	background: #03989e;
 	padding: 30px 0px;
 	position: fixed;
 }
