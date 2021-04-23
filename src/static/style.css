@@ -1,17 +1,21 @@
 /*Store this code in 'style.css' file inside the 'static' folder*/
 
-.registercontent{
+.content{
 	margin: 0 auto;
-	height: 720px;
+	height: 100%;
 	width: 100%;
 	background-color: #ffffff;
 	border-radius: 10px;
 }
 
-.registertop{
-	height: 60px;
+.header{
+	height: 120px;
 	width: 100%;
+	background: url("../images/logo.png") no-repeat;
 	background-color: #03989e;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	color: #ffffff;
 }
 
