@@ -1,20 +1,28 @@
-<html>
+<html lang="en">
     <head>
         <title> payment </title>
         <link rel="stylesheet" href="../static/style.css">
     </head>
     <body>
-        <div class="content" align="center">
-            <div class="header">
-                <h1>Enter Payment Method</h1>
-            </div></br></br>
-            <div class="paymentbottom">
-                <form action="{{ url_for('payment')}}" method="post" autocomplete="off">
-                <div class="msg">{{ msg }}</div>
-                <input type="text" name="cardNumber" placeholder="Enter Your Card Number" class="textbox" id="cardNumber" required></br></br>
-                <input type="text" name="cardholderName" placeholder="Enter the Name on the Card" class="textbox" id="cardholderName" required></br></br>
-                <input type="text" name="expirationDate" placeholder="Enter the Expiration Date" class="textbox" id="expirationDate" required></br></br>
-                <input type="submit" class="btn" value="Add Payment Method">
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1> 
+                <ul>
+                    <li class="active"><a href="{{url_for('payment')}}">Payment Method</a></li>
+                </ul>
+            </div>
+            <div class="content" align="center">
+                <div class="header">
+                    <h1>Enter Payment Method</h1>
+                </div></br></br>
+                <div class="paymentbottom">
+                    <form action="{{ url_for('payment')}}" method="post" autocomplete="off">
+                    <div class="msg">{{ msg }}</div>
+                    <input type="text" name="cardNumber" placeholder="Enter Your Card Number" class="textbox" id="cardNumber" required></br></br>
+                    <input type="text" name="cardholderName" placeholder="Enter the Name on the Card" class="textbox" id="cardholderName" required></br></br>
+                    <input type="text" name="expirationDate" placeholder="Enter the Expiration Date" class="textbox" id="expirationDate" required></br></br>
+                    <input type="submit" class="btn" value="Add Payment Method">
+                </div>
             </div>
         </div>
     </body>

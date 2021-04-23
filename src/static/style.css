@@ -67,15 +67,15 @@
 	position: relative;
 }
 
-.one .two{
+.one .sidebar{
 	width: 225px;
 	height: 100%;
-	background: #03989e;
-	padding: 30px 0px;
+	background: #17a4aa;
+	padding: 53px 0px;
 	position: fixed;
 }
 
-.one .two h1{
+.one .sidebar h1{
 	color: #fff;
 	text-transform: uppercase;
 	text-align: center;
@@ -84,28 +84,28 @@
 	font-weight: bold;
 }
 		
-.one .two h2{
+.one .sidebar h2{
 	color: #fff;
 	text-align: center;
 }
 		
-.one .two .active{
-	background: #0a8032;
+.one .sidebar .active{
+	background: #c9e265;
 }
 
-.one .two ul li{
+.one .sidebar ul li{
 	text-align: center;
 	padding: 15px;
 	border-bottom: 0.1px solid white;
 	border-top: 0.1px solid white;
 }	
 
-.one .two ul li a{
+.one .sidebar ul li a{
 	color: #ffffff;
 	display: block;
 }
 
-.one .two ul li a .side{
+.one .sidebar ul li a .side{
 	width: 25px;
 	align:center;
 }
