@@ -1,28 +1,34 @@
 /*Store this code in 'style.css' file inside the 'static' folder*/
 
-.registercontent{
+.content{
 	margin: 0 auto;
-	height: 720px;
-	width: 400px;
-	background-color: #e6ffee;
+	height: 100%;
+	width: 100%;
+	background-color: #ffffff;
 	border-radius: 10px;
 }
 
-.registertop{
-	height: 60px;
-	width: 400px;
-	background-color: #009933;
+.header{
+	height: 120px;
+	width: 100%;
+	background: url("../images/logo.png") no-repeat;
+	background-color: #03989e;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	color: #ffffff;
 }
 
 .textbox{
+	width: 300px;
+	text-align: center;
 	padding: 10px 40px;
-	background-color: #009933;
+	background-color: #ffffff;
 	border-radius: 10px;
 }
 
 ::placeholder {
-	color: #FFFFFF;
+	color: #03989e;
 	opacity: 1;
 	font-style: oblique;
 	font-weight: bold;
@@ -30,7 +36,7 @@
 
 .btn {
 	padding: 10px 40px;
-	background-color: #009933;
+	background-color: #03989e;
 	color: #FFFFFF;
 	font-style: oblique;
 	font-weight: bold;
@@ -38,7 +44,7 @@
 }
 
 .worddark{
-	color: #009933;
+	color: #03989e;
 	font-style: oblique;
 	font-weight: bold;
 }
@@ -63,15 +69,15 @@
 	position: relative;
 }
 
-.one .two{
+.one .sidebar{
 	width: 225px;
 	height: 100%;
-	background: #009933;
-	padding: 30px 0px;
+	background: #17a4aa;
+	padding: 53px 0px;
 	position: fixed;
 }
 
-.one .two h1{
+.one .sidebar h1{
 	color: #fff;
 	text-transform: uppercase;
 	text-align: center;
@@ -80,28 +86,28 @@
 	font-weight: bold;
 }
 		
-.one .two h2{
+.one .sidebar h2{
 	color: #fff;
 	text-align: center;
 }
 		
-.one .two .active{
-	background: #0a8032;
+.one .sidebar .active{
+	background: #c9e265;
 }
 
-.one .two ul li{
+.one .sidebar ul li{
 	text-align: center;
 	padding: 15px;
 	border-bottom: 0.1px solid white;
 	border-top: 0.1px solid white;
 }	
 
-.one .two ul li a{
+.one .sidebar ul li a{
 	color: #ffffff;
 	display: block;
 }
 
-.one .two ul li a .side{
+.one .sidebar ul li a .side{
 	width: 25px;
 	align:center;
 }
@@ -114,7 +120,7 @@
 .one .content .topbar{
 	text-align: center;
 	padding: 20px;
-	background: #00b33c;
+	background: #03989e;
 	color: white;
 }
 		
@@ -123,7 +129,7 @@
 }
 
 .one .content .contentbar h1{
-	color: #11a844;
+	color: #03989e;
 	text-align: center;
 	font-style: oblique;
 	font-weight: bold;
