@@ -28,14 +28,10 @@ def index():
 # registers a new user and inserts data into database
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
-    global indx
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
         username = request.form['username']
         budget = request.form['monthlybudget']
-
-        print(username)
-        print(budget)
 
         cursor = cnx.cursor(buffered = True)
         query = "SELECT * FROM user WHERE username = %s"
