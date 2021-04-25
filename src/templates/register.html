@@ -5,17 +5,26 @@
         <link rel="stylesheet" href="../static/style.css">	
     </head>
     <body>
-        <div class="content" align="center">
-            <div class="header">
-                <h1>Register</h1>
-	    </div></br></br>
-	    <div class="registerbottom">
-	         <form action="{{ url_for('register')}}" method="post" autocomplete="off">
-	    <div class="msg">{{ msg }}</div>
-	    <input type="text" name="username" placeholder="Enter Your Username" class="textbox" id="username" required></br></br>
-            <input type="text" name="monthlybudget" placeholder="Enter Your Monthly Budget" class="textbox" id="monthlybudget" required></br></br>
-            <input type="submit" class="btn" value="Register">
-	    </div>
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1>
+                <ul>
+                    <li><a href="{{url_for('login')}}">Login</a></li>
+                    <li class="active"><a href="{{url_for('register')}}">Register</a></li>
+                </ul> 
+            </div>
+            <div class="content" align="center">
+                <div class="header">
+                    <h1>Register</h1>
+            </div></br></br>
+            <div class="registerbottom">
+                <form action="{{ url_for('register')}}" method="post" autocomplete="off">
+            <div class="msg">{{ msg }}</div>
+            <input type="text" name="username" placeholder="Enter Your Username" class="textbox" id="username" required></br></br>
+                <input type="text" name="monthlybudget" placeholder="Enter Your Monthly Budget" class="textbox" id="monthlybudget" required></br></br>
+                <input type="submit" class="btn" value="Register">
+            </div>
+            </div>
         </div>
     </body>
 </html>
