@@ -8,7 +8,8 @@
             <div class="sidebar">
                 <h1>Menu</h1> 
                 <ul>
-                    <li class="active"><a href="{{url_for('payment')}}">Payment Method</a></li>
+                    <li class="active"><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                     <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
             </div>
@@ -17,7 +18,7 @@
                     <h1>Enter Payment Method</h1>
                 </div></br></br>
                 <div class="paymentbottom">
-                    <form action="{{ url_for('payment')}}" method="post" autocomplete="off">
+                    <form action="{{ url_for('paymentmethod')}}" method="post" autocomplete="off">
                     <div class="msg">{{ msg }}</div>
                     <input type="text" name="cardNumber" placeholder="Enter Your Card Number" class="textbox" id="cardNumber" required></br></br>
                     <input type="text" name="cardholderName" placeholder="Enter the Name on the Card" class="textbox" id="cardholderName" required></br></br>

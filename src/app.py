@@ -88,6 +88,40 @@ def index():
             msg = 'Log in successful.'
             return render_template('index.html', msg = msg)
 
+@app.route('/paymentmethod', methods = ['GET', 'POST'])
+def paymentmethod():
+    msg = ''
+    if 'loggedin' in session:
+        if request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
+            username = session['username'];
+            cardNumber = request.form['cardNumber']
+            cardholderName = request.form['cardholderName']
+            expirationDate = request.form['expirationDate']
+
+            cursor = cnx.cursor(buffered = True)
+            query = "SELECT * FROM payment WHERE username = %s"
+            cursor.execute(query, (username,))
+            account = cursor.fetchone()
+            if account:
+                # TODO: account can only have one payment method ???
+                msg = 'Payment method already exists for this account.'
+                
+            else:
+                # insert account payment method
+                insertcursor = cnx.cursor(buffered = True)
+                query = "INSERT INTO payment VALUES (%s, %s, %s, %s)"
+                insertcursor.execute(query, (cardNumber, username, cardholderName, expirationDate,))
+                cnx.commit()
+                msg = 'Payment method successfully saved.'
+
+        elif request.method == 'POST':
+            msg = 'Please fill in the empty fields.'
+
+        return render_template('payment.html', msg = msg)
+
+    else:
+        return redirect(url_for('login'))
+
 # registers a new user and inserts data into database
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
