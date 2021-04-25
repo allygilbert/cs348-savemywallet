@@ -32,6 +32,12 @@ def login():
 
     return render_template('login.html', msg = msg)
 
+@app.route('/logout')
+def logout():
+    session.pop('loggedin', None)
+    session.pop('username', None)
+    return redirect(url_for('login'))
+
 # deletes a user account and removes data from database
 @app.route('/deleteaccount', methods = ['GET', 'POST'])
 def delete():
