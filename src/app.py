@@ -10,6 +10,36 @@ cnx = mysql.connector.connect(user=connection_info.MyUser, password=connection_i
 def hello():
     return 'Hello, world!'
 
+# deletes a user account and removes data from database
+@app.route('/deleteaccount', methods = ['GET', 'POST'])
+def delete():
+    msg = ''
+    if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
+        username = request.form['username']
+        budget = request.form['monthlybudget']
+        
+        cursor = cnx.cursor(buffered = True)
+        query = "SELECT username, monthly_budget FROM user WHERE username = %s"
+        cursor.execute(query, (username,))
+        account = cursor.fetchone()
+        if account:
+            # confirm monthly budget
+            if float(budget) == float(account[1]):
+                deletecursor = cnx.cursor(buffered = True)
+                query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
+                deletecursor.execute(query, (username, budget,))
+                cnx.commit()
+                msg = 'Account successfully deleted.'
+            else:
+                msg = 'Incorrect monthly budget.'
+        else:
+            msg = 'Username does not exist.'
+    
+    elif request.method == 'POST':
+        msg = 'Please fill in the empty fields.'
+    
+    return render_template('delete.html', msg = msg)
+
 # a simple page that says hello
 @app.route('/index', methods = ['GET', 'POST'])
 def index():

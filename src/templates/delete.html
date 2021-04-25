@@ -8,8 +8,6 @@
             <div class="sidebar">
                 <h1>Menu</h1>
                 <ul>
-                    <li><a href="{{url_for('payment')}}">Payment Method</a></li>
-                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
                     <li class="active"><a href="{{url_for('delete')}}">Delete Account</a></li>
                 </ul> 
             </div>
@@ -18,7 +16,7 @@
                     <h1>Delete Account</h1>
                 </div></br></br>
                 <div class="deletebottom">
-                    <form action="{{ url_for('register')}}" method="post" autocomplete="off">
+                    <form action="{{ url_for('delete')}}" method="post" autocomplete="off">
                     <div class="msg">{{ msg }}</div>
                     <input type="text" name="username" placeholder="Confirm Your Username" class="textbox" id="username" required></br></br>
                     <input type="text" name="monthlybudget" placeholder="Confirm Your Monthly Budget" class="textbox" id="monthlybudget" required></br></br>
