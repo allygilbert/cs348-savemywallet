@@ -3,42 +3,69 @@ import mysql.connector
 import connection_info
 
 app = Flask(__name__)
+app.secret_key = 'IUSUCKS'
 
 cnx = mysql.connector.connect(user=connection_info.MyUser, password=connection_info.MyPassword, host=connection_info.MyHost, database=connection_info.MyDatabase, port='3306')
 
 @app.route('/')
-def hello():
-    return 'Hello, world!'
-
-# deletes a user account and removes data from database
-@app.route('/deleteaccount', methods = ['GET', 'POST'])
-def delete():
+@app.route('/login', methods = ['GET', 'POST'])
+def login():
     msg = ''
     if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
         username = request.form['username']
         budget = request.form['monthlybudget']
         
         cursor = cnx.cursor(buffered = True)
-        query = "SELECT username, monthly_budget FROM user WHERE username = %s"
-        cursor.execute(query, (username,))
+        query = "SELECT username, monthly_budget FROM user WHERE username = %s and monthly_budget = %s"
+        cursor.execute(query, (username, budget,))
         account = cursor.fetchone()
         if account:
-            # confirm monthly budget
-            if float(budget) == float(account[1]):
-                deletecursor = cnx.cursor(buffered = True)
-                query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
-                deletecursor.execute(query, (username, budget,))
-                cnx.commit()
-                msg = 'Account successfully deleted.'
-            else:
-                msg = 'Incorrect monthly budget.'
+            session['loggedin'] = True
+            session['username'] = account[0]
+            msg = "Log in successful!"
+            return redirect(url_for('delete')) # TODO: change to home page
         else:
-            msg = 'Username does not exist.'
-    
+            msg = 'Incorrect username or monthly budget.'
+
     elif request.method == 'POST':
         msg = 'Please fill in the empty fields.'
-    
-    return render_template('delete.html', msg = msg)
+
+    return render_template('login.html', msg = msg)
+
+# deletes a user account and removes data from database
+@app.route('/deleteaccount', methods = ['GET', 'POST'])
+def delete():
+    msg = ''
+    if 'loggedin' in session:
+        if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
+            username = request.form['username']
+            budget = request.form['monthlybudget']
+            
+            cursor = cnx.cursor(buffered = True)
+            query = "SELECT username, monthly_budget FROM user WHERE username = %s"
+            cursor.execute(query, (username,))
+            account = cursor.fetchone()
+            if account:
+                # confirm monthly budget
+                if float(budget) == float(account[1]):
+                    deletecursor = cnx.cursor(buffered = True)
+                    query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
+                    deletecursor.execute(query, (username, budget,))
+                    cnx.commit()
+                    msg = 'Account successfully deleted.'
+                    return redirect(url_for('login'))
+                else:
+                    msg = 'Incorrect monthly budget.'
+            else:
+                msg = 'Username does not exist.'
+        
+        elif request.method == 'POST':
+            msg = 'Please fill in the empty fields.'
+        
+        return render_template('delete.html', msg = msg)
+
+    else:
+        return redirect(url_for('login'))
 
 # a simple page that says hello
 @app.route('/index', methods = ['GET', 'POST'])
