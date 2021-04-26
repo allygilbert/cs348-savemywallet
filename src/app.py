@@ -147,6 +147,14 @@ def register():
         msg = 'Please fill in the empty fields.'
     
     return render_template('register.html', msg = msg)
+
+
+@app.route('/shop', methods = ['GET', 'POST'])
+def shop():
+    print("in shop")
+    if request.method == 'POST' in request.form:
+        print("Adding item to cart")
+    return render_template('shop.html')
     
 
 if __name__ == "__main__":

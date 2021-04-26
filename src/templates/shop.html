@@ -1,0 +1,80 @@
+<html lang="en">
+    <head>
+        <title> payment </title>
+        <link rel="stylesheet" href="../static/style.css">
+    </head>
+    <body>
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1> 
+                <ul>
+                    <li class="active"><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                    <li><a href="{{url_for('logout')}}">Logout</a></li>
+                </ul>
+            </div>
+            <div class="content" align="center">
+                <div class="header">
+                </div>
+                <div class="items">
+                    <div class="item"><img src="../images/banana.jpg">
+                        <div class="item-desc">
+                        <p>Banana</p> 
+                        <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
+                            <select>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            </select>
+                            <input type="submit" class="btn" value="Add">
+                        </form>
+                        </div>
+                    </div>
+                    <div class="item"><img src="../images/banana.jpg">
+                        <div class="item-desc">
+                        <p>Apple</p> 
+                            <select>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            </select>
+                        <button> Add to cart</button>
+                        </div>
+                    </div>
+                    <div class="item"><img src="../images/banana.jpg">
+                        <div class="item-desc">
+                        <p>Carrot</p> 
+                            <select>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            </select>
+                        <button> Add to cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -134,4 +134,10 @@
 	font-style: oblique;
 	font-weight: bold;
 }
+.items {
+	display: flex;
+}
+.item {
+	display: inline-block;
+}
 
