@@ -122,6 +122,89 @@ def paymentmethod():
     else:
         return redirect(url_for('login'))
 
+@app.route('/purchase', methods = ['GET', 'POST'])
+def purchase():
+    if 'loggedin' in session:
+        if request.method == 'GET':
+            # set up html file
+            htmlprologue = '''<html lang="en">
+                            <head>
+                                <title> purchase </title>
+                                <link rel="stylesheet" href="../static/style.css">
+                            </head>
+                            <body>
+                                <div class="one">
+                                    <div class="sidebar">
+                                        <h1>Menu</h1>
+                                        <ul>
+                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                        </ul> 
+                                    </div>
+                                    <div class="content" align="center">
+                                        <div class="header">
+                                            <h1>Purchase Cart</h1>
+                                        </div></br></br>
+                                        <div class="contentbar">
+                                            <h1>Cart Contents</h1></br>'''
+            htmlmiddle = '''<h1>Payment Method</h1></br>'''
+            htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">
+                            </div>
+                        </div>
+                    </div>
+                </body>
+            </html>'''
+
+            # create html table for cart info
+            carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+            cartcursor = cnx.cursor(buffered = True)
+            cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
+            cartcursor.execute(cartquery, (session['username'],))
+
+            for (item, price, quantity) in cartcursor:
+                carttable += "<tr><td>%s</td>"  % item
+                carttable += "<td>%s</td>"      % price
+                carttable += "<td>%s</td></tr>" % quantity
+
+            carttable += "</table></br>"
+
+            # create html for payment info
+            paymentcursor = cnx.cursor(buffered = True)
+            paymentquery = "SELECT * FROM payment WHERE username = %s"
+            paymentcursor.execute(paymentquery, (session['username'],))
+            payment = paymentcursor.fetchone()
+            
+            paymentinfo = '''<table>
+                                <tr>
+                                    <td class='worddark'>Card Number</td>
+                                    <td>%s</td>
+                                </tr>
+                                <tr>
+                                    <td class='worddark'>Name on Card</td>
+                                    <td>%s</td>
+                                </tr>
+                                <tr>
+                                    <td class='worddark'>Expiration Date</td>
+                                    <td>%s</td>
+                                </tr>
+                            </table></br>''' % (payment[0], payment[1], payment[2])
+
+            # write html file
+            f = open("templates/purchase.html", "w")
+            f.write(htmlprologue)
+            f.write(carttable)
+            f.write(htmlmiddle)
+            f.write(paymentinfo)
+            f.write(htmlepilogue)
+            f.close()
+
+            return render_template("purchase.html")
+
+    else:
+        return redirect(url_for('login'))
+
 # registers a new user and inserts data into database
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
