@@ -25,7 +25,7 @@ def login():
             session['loggedin'] = True
             session['username'] = account[0]
             msg = "Log in successful!"
-            return redirect(url_for('delete')) # TODO: change to home page
+            return redirect(url_for('shop'))
         else:
             msg = 'Incorrect username or monthly budget.'
 
@@ -145,6 +145,7 @@ def purchase():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
+                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
                                             <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                                             <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
                                             <li><a href="{{url_for('delete')}}">Delete Account</a></li>
