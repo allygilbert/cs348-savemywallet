@@ -20,6 +20,7 @@ def login():
         query = "SELECT username, monthly_budget FROM user WHERE username = %s and monthly_budget = %s"
         cursor.execute(query, (username, budget,))
         account = cursor.fetchone()
+        cursor.close()
         if account:
             session['loggedin'] = True
             session['username'] = account[0]
@@ -52,6 +53,7 @@ def delete():
             query = "SELECT username, monthly_budget FROM user WHERE username = %s"
             cursor.execute(query, (username,))
             account = cursor.fetchone()
+            cursor.close()
             if account:
                 # confirm monthly budget
                 if float(budget) == float(account[1]):
@@ -60,6 +62,7 @@ def delete():
                     deletecursor.execute(query, (username, budget,))
                     cnx.commit()
                     msg = 'Account successfully deleted.'
+                    deletecursor.close()
                     return redirect(url_for('login'))
                 else:
                     msg = 'Incorrect monthly budget.'
@@ -85,6 +88,7 @@ def index():
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
+        cursor.close()
         if account:
             msg = 'Log in successful.'
             return render_template('index.html', msg = msg)
@@ -103,6 +107,7 @@ def paymentmethod():
             query = "SELECT * FROM payment WHERE username = %s"
             cursor.execute(query, (username,))
             account = cursor.fetchone()
+            cursor.close()
             if account:
                 # TODO: account can only have one payment method ???
                 msg = 'Payment method already exists for this account.'
@@ -113,6 +118,7 @@ def paymentmethod():
                 query = "INSERT INTO payment VALUES (%s, %s, %s, %s)"
                 insertcursor.execute(query, (cardNumber, username, cardholderName, expirationDate,))
                 cnx.commit()
+                insertcursor.close()
                 msg = 'Payment method successfully saved.'
 
         elif request.method == 'POST':
@@ -172,6 +178,7 @@ def purchase():
                 carttable += "<td>%s</td>"      % price
                 carttable += "<td>%s</td></tr>" % quantity
 
+            cartcursor.close()
             carttable += "</table></br>"
 
             # create html for payment info
@@ -179,6 +186,7 @@ def purchase():
             paymentquery = "SELECT * FROM payment WHERE username = %s"
             paymentcursor.execute(paymentquery, (session['username'],))
             payment = paymentcursor.fetchone()
+            paymentcursor.close()
             
             paymentinfo = '''<table>
                                 <tr>
@@ -247,7 +255,6 @@ def createNewTransaction():
     total = cart[0]
 
     # insert new entry into table
-    cursor = cnx.cursor(buffered = True)
     insertquery = "INSERT INTO transaction VALUES(%s, %s)"
     cursor.execute(insertquery, (transactionID, total, ))
     cnx.commit()
@@ -300,6 +307,7 @@ def register():
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
+        cursor.close()
         if account:
             msg = 'Username already exists.'
         else:
@@ -307,6 +315,7 @@ def register():
             query = "INSERT INTO user VALUES (%s, %s)"
             insertcursor.execute(query, (username, budget,))
             cnx.commit()
+            insertcursor.close()
             msg = 'New account successfully registered.'
     
     elif request.method == 'POST':
