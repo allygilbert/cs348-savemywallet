@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
 import connection_info
@@ -124,8 +125,9 @@ def paymentmethod():
 
 @app.route('/purchase', methods = ['GET', 'POST'])
 def purchase():
+    msg = ''
     if 'loggedin' in session:
-        if request.method == 'GET':
+        if request.method == 'GET':  # generate purchase.html
             # set up html file
             htmlprologue = '''<html lang="en">
                             <head>
@@ -148,6 +150,8 @@ def purchase():
                                             <h1>Purchase Cart</h1>
                                         </div></br></br>
                                         <div class="contentbar">
+                                            <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
+                                            <div class="msg">{{ msg }}</div>
                                             <h1>Cart Contents</h1></br>'''
             htmlmiddle = '''<h1>Payment Method</h1></br>'''
             htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">
@@ -202,8 +206,87 @@ def purchase():
 
             return render_template("purchase.html")
 
+        elif request.method == 'POST':
+            transactionID = createNewTransaction()  # create new transaction entry
+            transferCart(transactionID)  # move items in user's cart to transaction-item relation
+            storePurchase(transactionID)  # store user's payment info with a purchase
+            clearCart()  # clear user's shopping cart
+
+            msg = 'Order successfully placed!'
+            return render_template("purchase.html", msg = msg)
+
     else:
         return redirect(url_for('login'))
+
+def clearCart():
+    cursor = cnx.cursor(buffered = True)
+    query = "DELETE FROM shopping_cart WHERE username = %s"
+    cursor.execute(query, (session['username'],))
+    cnx.commit()
+    cursor.close()
+
+def createNewTransaction():
+    # get next transaction ID number
+    cursor = cnx.cursor(buffered = True)
+    query = "SELECT transaction_id FROM transaction ORDER BY transaction_id DESC"
+    cursor.execute(query)
+    latestTransaction = cursor.fetchone()
+
+    transactionID = -1
+    if latestTransaction:
+        print(latestTransaction[0])
+        transactionID = latestTransaction[0] + 1
+        print(transactionID)
+    else:
+        transactionID = 0
+
+    # compute transaction total by totaling cart
+    totalquery = "SELECT sum(i.price * s.quantity) FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
+    cursor.execute(totalquery, (session['username'],))
+    cart = cursor.fetchone()
+    total = cart[0]
+
+    # insert new entry into table
+    cursor = cnx.cursor(buffered = True)
+    insertquery = "INSERT INTO transaction VALUES(%s, %s)"
+    cursor.execute(insertquery, (transactionID, total, ))
+    cnx.commit()
+
+    cursor.close()
+    return transactionID
+
+def storePurchase(transactionID):
+    cursor = cnx.cursor(buffered = True)
+
+    # get payment info
+    paymentquery = "SELECT payment_id FROM payment WHERE username = %s"
+    cursor.execute(paymentquery, (session['username'],))
+    payment = cursor.fetchone()
+    paymentID = payment[0]
+
+    insertquery = "INSERT INTO purchase VALUES(%s, %s, %s, %s)"
+    cursor.execute(insertquery, (session['username'], transactionID, paymentID, datetime.now().strftime("%m/%d/%Y"),))
+    cursor.close()
+
+def transferCart(transactionID):
+    # get cart items
+    cursor = cnx.cursor(buffered = True)
+    cartquery = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
+    cursor.execute(cartquery, (session['username'],))
+
+    count = 0
+    insertquery = "INSERT INTO item_transaction VALUES "
+    for (item, quantity) in cursor:
+        if count == 0:
+            insertquery += "(%s, %s, %s)" % (item, transactionID, quantity)
+            count += 1
+        else:
+            insertquery += ", (%s, %s, %s)" % (item, transactionID, quantity)
+
+    # insert items into item_transaction relation
+    cursor.execute(insertquery)
+
+    cursor.close()
 
 # registers a new user and inserts data into database
 @app.route('/register', methods = ['GET', 'POST'])
