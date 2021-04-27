@@ -169,15 +169,28 @@ def shop():
         findItemId = "SELECT item_id FROM item WHERE name = %s"
         cursor.execute(findItemId, (name,))
         item_id = cursor.fetchone()
-        print("item_id")
-        print(item_id[0])
+
+        findItem = "SELECT item_id FROM shopping_cart WHERE name=%s"
+        cursor.execute(findItem, (name,))
+
+        item = cursor.fetchone()
+    
+        print(username)
         addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
         cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
     return render_template('shop.html')
+
 @app.route('/shopping_cart', methods = ['GET', 'POST'])
 def shopping_cart():    
+    username = session['username']
 
+    cursor = cnx.cursor(buffered = True)
+    findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
+    cursor.execute(findBudget, (username,))
+    budget = cursor.fetchone()
+    print(budget[0])
+    return render_template('shopping_cart.html')
 if __name__ == "__main__":
     app.debug = True
     app.run()
