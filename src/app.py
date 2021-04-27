@@ -350,8 +350,10 @@ def shop():
         cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
     return render_template('shop.html')
+
 @app.route('/shopping_cart', methods = ['GET', 'POST'])
 def shopping_cart():    
+    print("adding this print statement to avoid indentation error")
 
 if __name__ == "__main__":
     app.debug = True
