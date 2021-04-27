@@ -147,7 +147,36 @@ def register():
         msg = 'Please fill in the empty fields.'
     
     return render_template('register.html', msg = msg)
-    
+
+
+@app.route('/shop', methods = ['GET', 'POST'])
+def shop():
+    print("in shop")
+    if request.method == 'POST':
+        cursor = cnx.cursor(buffered = True)
+
+        username = session['username']
+        name = request.form['item_name']
+        quantity = request.form['quantity']
+        
+        findPrice = "SELECT price FROM item WHERE name = %s"
+        cursor.execute(findPrice, (name,))
+        price = cursor.fetchone()
+        print(name)
+        print(quantity)
+        print(findPrice)
+        print("Adding item to cart")
+        findItemId = "SELECT item_id FROM item WHERE name = %s"
+        cursor.execute(findItemId, (name,))
+        item_id = cursor.fetchone()
+        print("item_id")
+        print(item_id[0])
+        addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+        cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
+        #cursor = cnx.cursor(buffered = True)
+    return render_template('shop.html')
+@app.route('/shopping_cart', methods = ['GET', 'POST'])
+def shopping_cart():    
 
 if __name__ == "__main__":
     app.debug = True
