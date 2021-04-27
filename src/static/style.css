@@ -11,7 +11,7 @@
 .header{
 	height: 120px;
 	width: 100%;
-	background: url("../images/logo.png") no-repeat;
+	background: url("../static/images/logo.png") no-repeat;
 	background-color: #03989e;
 	display: flex;
 	align-items: center;
@@ -139,5 +139,9 @@
 }
 .item {
 	display: inline-block;
+}
+img {
+	max-width: 100%;
+	max-height: 100%;
 }
 

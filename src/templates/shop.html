@@ -17,11 +17,14 @@
                 <div class="header">
                 </div>
                 <div class="items">
-                    <div class="item"><img src="../images/banana.jpg">
+                    <div class="item"><img src="../static/images/banana.jpg" width="200px">
                         <div class="item-desc">
-                        <p>Banana</p> 
-                        <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
-                            <select>
+                            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
+                       
+                            <label for="banana">Banana</p> 
+                            <input type="hidden" name="item_name" value="Banana">
+                        <p>$0.99/each</p>
+                            <select name="quantity"> 
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -37,7 +40,7 @@
                         </form>
                         </div>
                     </div>
-                    <div class="item"><img src="../images/banana.jpg">
+                    <div class="item"><img src="../static/images/banana.jpg"  width="200px"> 
                         <div class="item-desc">
                         <p>Apple</p> 
                             <select>
@@ -55,7 +58,7 @@
                         <button> Add to cart</button>
                         </div>
                     </div>
-                    <div class="item"><img src="../images/banana.jpg">
+                    <div class="item"><img src="../static/images/banana.jpg" width="200px">
                         <div class="item-desc">
                         <p>Carrot</p> 
                             <select>
