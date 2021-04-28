@@ -153,31 +153,60 @@ def register():
 def shop():
     print("in shop")
     if request.method == 'POST':
+        print("post:")
         cursor = cnx.cursor(buffered = True)
-
+        print("after cursor")
         username = session['username']
+        print("after requesting username")
+
         name = request.form['item_name']
+        print("after requesting item_name")
+
         quantity = request.form['quantity']
-        
+        print("after requesting quantity")
+
+        print("after requesting form elements")
         findPrice = "SELECT price FROM item WHERE name = %s"
         cursor.execute(findPrice, (name,))
+        print("after first query execution")
+
         price = cursor.fetchone()
+        print("name:")
         print(name)
         print(quantity)
         print(findPrice)
         print("Adding item to cart")
-        findItemId = "SELECT item_id FROM item WHERE name = %s"
+        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
         cursor.execute(findItemId, (name,))
         item_id = cursor.fetchone()
+        print("item_id:")
+        print(item_id[0])
+       # print(username)
+        findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
+        cursor.execute(findItem, (username, item_id[0]))
+        it = cursor.fetchone()
+        print("it: ")
+        print(it)
 
-        findItem = "SELECT item_id FROM shopping_cart WHERE name=%s"
-        cursor.execute(findItem, (name,))
-
-        item = cursor.fetchone()
     
-        print(username)
-        addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
-        cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
+        if( it[0] is None ):
+            print("item isnt in shopping cart") 
+            addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+            cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
+        else:
+            print("item is in shopping cart") 
+
+            item = cursor.fetchone()
+            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+            cursor.execute(getQuantity, (item_id[0], username,))
+            quantity = cursor.fetchone()
+            print(quantity[0])
+            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+            cursor.execute(updateQuantity, (quantity[0]+1, item_id[0], username, ))
+            
+       
+       # addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+        #cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
     return render_template('shop.html')
 
@@ -190,6 +219,9 @@ def shopping_cart():
     cursor.execute(findBudget, (username,))
     budget = cursor.fetchone()
     print(budget[0])
+    findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
+    itemsIds = cursor.fetchall();
+    
     return render_template('shopping_cart.html')
 if __name__ == "__main__":
     app.debug = True
