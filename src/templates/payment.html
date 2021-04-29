@@ -8,14 +8,11 @@
             <div class="sidebar">
                 <h1>Menu</h1> 
                 <ul>
-                    <ul>
-                        <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                        <li class="active"><a href="{{url_for('delete')}}">Delete Account</a></li>
-                        <li><a href="{{url_for('shop')}}"> Shop </a></li>
-                        <li><a href="{{url_for('shopping_cart')}}"> Cart </a></li>
-    
-                        <li><a href="{{url_for('logout')}}">Logout</a></li>
-                    </ul> 
+                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+                    <li class="active"><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                    <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
             </div>
             <div class="content" align="center">
