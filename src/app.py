@@ -212,16 +212,44 @@ def shop():
 
 @app.route('/shopping_cart', methods = ['GET', 'POST'])
 def shopping_cart():    
-    username = session['username']
+    print("IN SHOPPING CART WOHOO")
+    hello = "<h1> WHASSUPPPPPP </h1>"
+    f = open("shopping_cart.html", "w")
+    f.write(hello)
 
-    cursor = cnx.cursor(buffered = True)
-    findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
-    cursor.execute(findBudget, (username,))
-    budget = cursor.fetchone()
-    print(budget[0])
-    findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
-    itemsIds = cursor.fetchall();
-    
+    username = session['username']
+    if request.method == 'POST':
+        cursor = cnx.cursor(buffered = True)
+        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
+        cursor.execute(findItemId, (name,))
+        item_id = cursor.fetchone()
+        #print(request.form.get("Remove"))
+        if 'Remove' in request.form:
+            print("REMOVE")
+            print("after username")
+            print(request.form)
+            name = request.form['item_name']    
+            print("item_id:")
+            print(item_id[0])
+            
+            deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+            cursor.execute(deleteItem, (item_id[0], username,))
+        elif 'Change Quantity' in request.form:
+            print("CHANGE QUANTITY")
+            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+            cursor.execute(getQuantity, (item_id[0], username,))
+            quantity = cursor.fetchone()
+            print(quantity[0])
+            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+            cursor.execute(updateQuantity, (quantity[0]+1, item_id[0], username, ))
+        
+        cursor = cnx.cursor(buffered = True)
+        findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
+        cursor.execute(findBudget, (username,))
+        budget = cursor.fetchone()
+        print(budget[0])
+        findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
+        itemsIds = cursor.fetchall();
     return render_template('shopping_cart.html')
 if __name__ == "__main__":
     app.debug = True
