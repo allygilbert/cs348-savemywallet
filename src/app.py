@@ -173,11 +173,15 @@ def purchase():
             cartcursor = cnx.cursor(buffered = True)
             cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
             cartcursor.execute(cartquery, (session['username'],))
-
+            
+          #  cartSnippet = cartcursor.fetchone
+            
             for (item, price, quantity) in cartcursor:
                 carttable += "<tr><td>%s</td>"  % item
                 carttable += "<td>%s</td>"      % price
-                carttable += "<td>%s</td></tr>" % quantity
+                carttable += "<td>%s</td>" % quantity
+                carttable += '''<td> <input type="submit" class="btn" value="Remove" name="Remove"></td></tr>'''
+
 
             cartcursor.close()
             carttable += "</table></br>"
@@ -229,7 +233,7 @@ def purchase():
 
 def clearCart():
     cursor = cnx.cursor(buffered = True)
-    query = "DELETE FROM shopping_cart WHERE username = %s"
+ #   query = "DELETE FROM shopping_cart WHERE username = %s"
     cursor.execute(query, (session['username'],))
     cnx.commit()
     cursor.close()
@@ -329,33 +333,119 @@ def register():
 def shop():
     print("in shop")
     if request.method == 'POST':
+        print("post:")
         cursor = cnx.cursor(buffered = True)
-
+        print("after cursor")
         username = session['username']
+        print("after requesting username")
+
         name = request.form['item_name']
+        print("after requesting item_name")
+
         quantity = request.form['quantity']
-        
+        print("after requesting quantity")
+
+        print("after requesting form elements")
         findPrice = "SELECT price FROM item WHERE name = %s"
         cursor.execute(findPrice, (name,))
+        print("after first query execution")
+
         price = cursor.fetchone()
+        print("name:")
         print(name)
         print(quantity)
         print(findPrice)
         print("Adding item to cart")
-        findItemId = "SELECT item_id FROM item WHERE name = %s"
+        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
         cursor.execute(findItemId, (name,))
         item_id = cursor.fetchone()
-        print("item_id")
+        print("item_id:")
         print(item_id[0])
-        addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
-        cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
+       # print(username)
+        findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
+        cursor.execute(findItem, (username, item_id[0]))
+        it = cursor.fetchone()
+        print("it: ")
+        print(it)
+
+    
+        if( it is None ):
+            print("item isnt in shopping cart") 
+            addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+            cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
+        else:
+            print("item is in shopping cart") 
+
+            item = cursor.fetchone()
+            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+            cursor.execute(getQuantity, (item_id[0], username,))
+            quantity = cursor.fetchone()
+            print(quantity[0])
+            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+            cursor.execute(updateQuantity, (quantity[0]+1, item_id[0], username, ))
+            
+       
+       # addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+        #cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
     return render_template('shop.html')
 
 @app.route('/shopping_cart', methods = ['GET', 'POST'])
 def shopping_cart():    
-    print("adding this print statement to avoid indentation error")
+    print("IN SHOPPING CART WOHOO")
+    hello = "<h1> WHASSUPPPPPP </h1>"
+    f = open("shopping_cart.html", "w")
+    f.write(hello)
 
+    username = session['username']
+    if request.method == 'POST':
+        cursor = cnx.cursor(buffered = True)
+        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
+        cursor.execute(findItemId, (name,))
+        item_id = cursor.fetchone()
+        #print(request.form.get("Remove"))
+        if 'Remove' in request.form:
+            print("REMOVE")
+            print("after username")
+            print(request.form)
+            name = request.form['item_name']    
+            print("item_id:")
+            print(item_id[0])
+            
+          #  deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+           # cursor.execute(deleteItem, (item_id[0], username,))
+        elif 'Change Quantity' in request.form:
+            print("CHANGE QUANTITY")
+            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+            cursor.execute(getQuantity, (item_id[0], username,))
+            quantity = cursor.fetchone()
+            print(quantity[0])
+            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+            cursor.execute(updateQuantity, (quantity[0]+1, item_id[0], username, ))
+        
+        cursor = cnx.cursor(buffered = True)
+        findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
+        cursor.execute(findBudget, (username,))
+        budget = cursor.fetchone()
+        print(budget[0])
+        findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
+        itemsIds = cursor.fetchall();
+    return render_template('shopping_cart.html')
+
+@app.route('/budget', methods = ['GET', 'POST'])
+def budget(): 
+    if request.method == 'POST':
+        username = session['username']
+        print(request.form)
+        budget = request.form['monthly_budget']
+        print(username)
+        print(budget)
+        cursor = cnx.cursor(buffered = True)
+        changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
+        cursor.execute(changeBudget, (budget, username,))
+        cnx.commit()
+        cursor.close()
+    return render_template('budget.html')
 if __name__ == "__main__":
     app.debug = True
     app.run()

@@ -4,7 +4,7 @@
         <link rel="stylesheet" href="../static/style.css">
     </head>
     <body>
-        <div class="one">
+       <div class="one">
             <div class="sidebar">
                 <h1>Menu</h1> 
                 <ul>
@@ -14,7 +14,7 @@
                     <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
                     <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                     <li><a href="{{url_for('logout')}}">Logout</a></li>
-                </ul>
+                </ul> 
             </div>
             <div class="content" align="center">
                 <div class="header">
@@ -47,7 +47,7 @@
                         <div class="item-desc">
                         
                             <p>Apple</p>
-                            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
+                            <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
 
                         <input type="hidden" name="item_name" value="apple">
                          
@@ -64,12 +64,16 @@
                             <option value="9">9</option>
                             <option value="10">10</option>
                             </select>
-                            <input type="submit" class="btn" value="Add">
+                            <input type="submit" class="btn" value="Remove" name="Remove">
+                            <input type="submit" class="btn" value="Change Quantity" name="Change Quantity">
+
                         </form>
 
                         </div>
                     </div>
                 </div>
+                <h1> Total </h1>
+                <p> Balance: (Budget - total) </p> <p></p>
             </div>
         </div>
     </body>

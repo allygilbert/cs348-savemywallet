@@ -136,9 +136,14 @@
 }
 .items {
 	display: flex;
+	flex-direction: column;
 }
 .item {
 	display: inline-block;
+}
+.item > * {
+	display:flex;
+	flex-direction: row;
 }
 img {
 	max-width: 100%;

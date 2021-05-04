@@ -1,0 +1,35 @@
+<html lang="en">
+
+<head>
+    <title> payment </title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+
+<body>
+    <div class="one">
+        <div class="sidebar">
+            <h1>Menu</h1>
+            <ul>
+                <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+            </ul>
+        </div>
+        <div class="content" align="center">
+
+
+        <form action="" method="post" name="changeBudget" enctype="multipart/form-data">
+            <input type="text" name="name" placeholder="John Doe">
+            <h3>Change Monthly budget to (in $):</h3>
+            <input name="monthly_budget" placeholder="10">
+            <input type="submit">
+        </form>
+        </div>
+    </div>
+
+</body>
+
+</html>
