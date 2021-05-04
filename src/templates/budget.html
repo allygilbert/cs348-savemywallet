@@ -22,10 +22,16 @@
 
 
         <form action="" method="post" name="changeBudget" enctype="multipart/form-data">
-            <input type="text" name="name" placeholder="John Doe">
+            <h3>Remaining budget: </h3>
+
+            <h3>Add to budget (in $): </h3>
+            <input name="add_to_budget_i" placeholder="5">
+            <input type="submit" name="add_to_budget">
+            <h2>OR</h2>
             <h3>Change Monthly budget to (in $):</h3>
-            <input name="monthly_budget" placeholder="10">
-            <input type="submit">
+            <input type="number" name="monthly_budget" placeholder="10">
+            <input type="submit" name="change_budget">
+
         </form>
         </div>
     </div>
