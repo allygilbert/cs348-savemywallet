@@ -7,7 +7,7 @@
                                 <div class="one">
                                     <div class="sidebar">
                                         <h1>Menu</h1>
-                                       <ul>
+                                    <ul>
                     <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
@@ -21,22 +21,9 @@
                                             <h1>Purchase Cart</h1>
                                         </div></br></br>
                                         <div class="contentbar">
-                                            <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
+                                            <form action="{{ url_for('admin')}}" method="post" autocomplete="off">
                                             <div class="msg">{{ msg }}</div>
-                                            <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr><tr><td>Tomato</td><td>0.30</td><td>2</td><td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr></table></br><h1>Payment Method</h1></br><table>
-                        <tr>
-                            <td class='worddark'>Card Number</td>
-                            <td>1234</td>
-                        </tr>
-                        <tr>
-                            <td class='worddark'>Name on Card</td>
-                            <td>victoire</td>
-                        </tr>
-                        <tr>
-                            <td class='worddark'>Expiration Date</td>
-                            <td>victoire</td>
-                        </tr>
-                    </table></br><input type="submit" class="btn" name="purchase" value="Place Order">
+                                            <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr><tr><td>banana</td><td>1.00</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="banana"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Apple</td><td>0.53</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Apple"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Tomato</td><td>0.30</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr></table></br>
                             </div>
                         </div>
                     </div>
