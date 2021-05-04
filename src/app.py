@@ -102,8 +102,18 @@ def index():
 def paymentmethod():
     msg = ''
     if 'loggedin' in session:
-        if request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
-            username = session['username'];
+        username = session['username']
+        checkcursor = cnx.cursor(buffered = True)
+        query = "SELECT * FROM payment WHERE username = %s"
+        checkcursor.execute(query, (username,))
+        payment = checkcursor.fetchone()
+        checkcursor.close()
+
+        if payment:
+            # display existing payment method
+            return render_template('disppayment.html', payment = payment)
+
+        elif request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
             cardNumber = request.form['cardNumber']
             cardholderName = request.form['cardholderName']
             expirationDate = request.form['expirationDate']

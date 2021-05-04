@@ -1,0 +1,43 @@
+<html lang="en">
+    <head>
+        <title> payment </title>
+        <link rel="stylesheet" href="../static/style.css">
+    </head>
+    <body>
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1> 
+                <ul>
+                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+                </ul>
+            </div>
+            <div class="content" align="center">
+                <div class="header">
+                    <h1>Review Payment Method</h1>
+                </div></br></br>
+                <div class="contentbar">
+                    <h1>Payment Method</h1></br>
+                    <table>
+                        <tr>
+                            <td class='worddark'>Card Number</td>
+                            <td>{{ payment[0] }}</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Name on Card</td>
+                            <td>{{ payment[1] }}</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Expiration Date</td>
+                            <td>{{ payment[2] }}</td>
+                        </tr>
+                    </table></br>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
