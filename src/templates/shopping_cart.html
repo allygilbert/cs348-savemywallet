@@ -4,15 +4,15 @@
         <link rel="stylesheet" href="../static/style.css">
     </head>
     <body>
-     <!--   <div class="one">
+       <div class="one">
             <div class="sidebar">
                 <h1>Menu</h1> 
                 <ul>
+                    <li><a href="{{url_for('shop')}}">Shop</a></li>
                     <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                    <li class="active"><a href="{{url_for('delete')}}">Delete Account</a></li>
-                    <li><a href="{{url_for('shop')}}"> Shop </a></li>
-                    <li><a href="{{url_for('shopping_cart')}}"> Cart </a></li>
-
+                    <li><a href="{{url_for('budget')}}">Budget</a></li>
+                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                     <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul> 
             </div>
@@ -47,7 +47,7 @@
                         <div class="item-desc">
                         
                             <p>Apple</p>
-                            <form action="{{ url_for('shopping_cart')}}" method="post" autocomplete="off">
+                            <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
 
                         <input type="hidden" name="item_name" value="apple">
                          
@@ -75,6 +75,6 @@
                 <h1> Total </h1>
                 <p> Balance: (Budget - total) </p> <p></p>
             </div>
-        </div>-->
+        </div>
     </body>
 </html>

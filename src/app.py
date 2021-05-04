@@ -173,11 +173,15 @@ def purchase():
             cartcursor = cnx.cursor(buffered = True)
             cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
             cartcursor.execute(cartquery, (session['username'],))
-
+            
+          #  cartSnippet = cartcursor.fetchone
+            
             for (item, price, quantity) in cartcursor:
                 carttable += "<tr><td>%s</td>"  % item
                 carttable += "<td>%s</td>"      % price
-                carttable += "<td>%s</td></tr>" % quantity
+                carttable += "<td>%s</td>" % quantity
+                carttable += '''<td> <input type="submit" class="btn" value="Remove" name="Remove"></td></tr>'''
+
 
             cartcursor.close()
             carttable += "</table></br>"
@@ -229,7 +233,7 @@ def purchase():
 
 def clearCart():
     cursor = cnx.cursor(buffered = True)
-    query = "DELETE FROM shopping_cart WHERE username = %s"
+ #   query = "DELETE FROM shopping_cart WHERE username = %s"
     cursor.execute(query, (session['username'],))
     cnx.commit()
     cursor.close()
@@ -365,7 +369,7 @@ def shop():
         print(it)
 
     
-        if( it[0] is None ):
+        if( it is None ):
             print("item isnt in shopping cart") 
             addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
             cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
@@ -408,8 +412,8 @@ def shopping_cart():
             print("item_id:")
             print(item_id[0])
             
-            deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-            cursor.execute(deleteItem, (item_id[0], username,))
+          #  deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+           # cursor.execute(deleteItem, (item_id[0], username,))
         elif 'Change Quantity' in request.form:
             print("CHANGE QUANTITY")
             getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
@@ -427,6 +431,21 @@ def shopping_cart():
         findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
         itemsIds = cursor.fetchall();
     return render_template('shopping_cart.html')
+
+@app.route('/budget', methods = ['GET', 'POST'])
+def budget(): 
+    if request.method == 'POST':
+        username = session['username']
+        print(request.form)
+        budget = request.form['monthly_budget']
+        print(username)
+        print(budget)
+        cursor = cnx.cursor(buffered = True)
+        changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
+        cursor.execute(changeBudget, (budget, username,))
+        cnx.commit()
+        cursor.close()
+    return render_template('budget.html')
 if __name__ == "__main__":
     app.debug = True
     app.run()
