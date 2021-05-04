@@ -1,32 +1,24 @@
 <html lang="en">
-    <head>
-        <title> payment </title>
-        <link rel="stylesheet" href="../static/style.css">
-    </head>
-    <body>
-        <div class="one">
-            <div class="sidebar">
-                <h1>Menu</h1> 
-                <ul>
-                    <li><a href="{{url_for('shop')}}">Shop</a></li>
-                    <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                    <li><a href="{{url_for('budget')}}">Budget</a></li>
-                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                    <li><a href="{{url_for('logout')}}">Logout</a></li>
-                </ul>
-            </div>
-            <div class="content" align="center">
-                <div class="header">
+        <head>
+            <title> payment </title>
+            <link rel="stylesheet" href="../static/style.css">
+        </head>
+        <body>
+            <div class="one">
+                <div class="sidebar">
+                    <h1>Menu</h1> 
+                    <ul>
+                        <li><a href="{{url_for('shop')}}">Shop</a></li>
+                        <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                        <li><a href="{{url_for('budget')}}">Budget</a></li>
+                        <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                        <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                        <li><a href="{{url_for('logout')}}">Logout</a></li>
+                    </ul>
                 </div>
-                <div class="items">
-                    <div class="item"><img src="../static/images/banana.jpg" width="200px">
-                        <div class="item-desc">
-                            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
-                       
-                            <label for="banana">Banana</p> 
-                            <input type="hidden" name="item_name" value="Banana">
-                        <p>$0.99/each</p>
+                <div class="content" align="center">
+        <table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr><tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>banana</td><td>1.00</td>          <input type="hidden" name="item_name" value="banana"></td>
+                        <td>
                             <select name="quantity"> 
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -39,20 +31,13 @@
                             <option value="9">9</option>
                             <option value="10">10</option>
                             </select>
+                           
                             <input type="submit" class="btn" value="Add">
-                        </form>
-                        </div>
-                    </div>
-                    <div class="item"><img src="../static/images/apple.jfif"  width="200px"> 
-                        <div class="item-desc">
-                        
-                            <p>Apple</p>
-                            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
-
-                        <input type="hidden" name="item_name" value="apple">
-                         
-                        <select name="quantity"> 
-
+                         </td></tr></form>
+                
+                    <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Apple</td><td>0.53</td>          <input type="hidden" name="item_name" value="Apple"></td>
+                        <td>
+                            <select name="quantity"> 
                             <option value="1">1</option>
                             <option value="2">2</option>
                             <option value="3">3</option>
@@ -64,13 +49,30 @@
                             <option value="9">9</option>
                             <option value="10">10</option>
                             </select>
+                           
                             <input type="submit" class="btn" value="Add">
-                        </form>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
+                         </td></tr></form>
+                
+                    <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Tomato</td><td>0.30</td>          <input type="hidden" name="item_name" value="Tomato"></td>
+                        <td>
+                            <select name="quantity"> 
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                            </select>
+                           
+                            <input type="submit" class="btn" value="Add">
+                         </td></tr></form>
+                
+                    </table></br></div>
+            
         </div>
     </body>
 </html>
