@@ -53,28 +53,33 @@ def delete():
     if 'loggedin' in session:
         if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
             username = request.form['username']
-            budget = request.form['monthlybudget']
 
-            cursor = cnx.cursor(buffered=True)
-            query = "SELECT username, monthly_budget FROM user WHERE username = %s"
-            cursor.execute(query, (username,))
-            account = cursor.fetchone()
-            cursor.close()
-            if account:
-                # confirm monthly budget
-                if float(budget) == float(account[1]):
-                    deletecursor = cnx.cursor(buffered=True)
-                    query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
-                    deletecursor.execute(query, (username, budget,))
-                    cnx.commit()
-                    msg = 'Account successfully deleted.'
-                    deletecursor.close()
-                    return redirect(url_for('login'))
+            if username != session['username']:
+                msg = 'Incorrect username.'
+            
+            else: 
+                budget = request.form['monthlybudget']
+                
+                cursor = cnx.cursor(buffered = True)
+                query = "SELECT username, monthly_budget FROM user WHERE username = %s"
+                cursor.execute(query, (username,))
+                account = cursor.fetchone()
+                cursor.close()
+                if account:
+                    # confirm monthly budget
+                    if float(budget) == float(account[1]):
+                        deletecursor = cnx.cursor(buffered = True)
+                        query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
+                        deletecursor.execute(query, (username, budget,))
+                        cnx.commit()
+                        msg = 'Account successfully deleted.'
+                        deletecursor.close()
+                        return redirect(url_for('login'))
+                    else:
+                        msg = 'Incorrect monthly budget.'
                 else:
-                    msg = 'Incorrect monthly budget.'
-            else:
-                msg = 'Username does not exist.'
-
+                    msg = 'Username does not exist.'
+        
         elif request.method == 'POST':
             msg = 'Please fill in the empty fields.'
 
@@ -104,8 +109,18 @@ def index():
 def paymentmethod():
     msg = ''
     if 'loggedin' in session:
-        if request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
-            username = session['username']
+        username = session['username']
+        checkcursor = cnx.cursor(buffered = True)
+        query = "SELECT * FROM payment WHERE username = %s"
+        checkcursor.execute(query, (username,))
+        payment = checkcursor.fetchone()
+        checkcursor.close()
+
+        if payment:
+            # display existing payment method
+            return render_template('disppayment.html', payment = payment)
+
+        elif request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
             cardNumber = request.form['cardNumber']
             cardholderName = request.form['cardholderName']
             expirationDate = request.form['expirationDate']
