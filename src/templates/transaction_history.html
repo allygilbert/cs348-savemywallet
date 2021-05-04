@@ -1,0 +1,23 @@
+<html lang="en">
+                            <head>
+                                <title> purchase </title>
+                                <link rel="stylesheet" href="../static/style.css">
+                            </head>
+                            <body>
+                                <div class="one">
+                                    <div class="sidebar">
+                                        <h1>Menu</h1>
+                                        <ul>
+                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
+                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                        </ul> 
+                                    </div>
+                                    <div class="content" align="center">
+                                       <table><tr class='worddark'><td>user_id</td><td>trans_id</td><td>item_id</td><td>pay_id</td><td>date</td><td>total</td></tr><tr><td>victoire</td><td>3</td><td>1234</td><td>04/28/2021</td><tr><td>victoire</td><td>6</td><td>1234</td><td>05/04/2021</td><tr><td>victoire</td><td>7</td><td>1234</td><td>05/04/2021</td><tr><td>victoire</td><td>8</td><td>1234</td><td>05/04/2021</td><tr><td>victoire</td><td>9</td><td>1234</td><td>05/04/2021</td><tr><td>victoire</td><td>10</td><td>1234</td><td>05/04/2021</td><tr><td>victoire</td><td>11</td><td>1234</td><td>05/04/2021</td></tr></table></br>
+                        </div>
+                    </div>
+                </body>
+            </html>
