@@ -435,16 +435,32 @@ def shopping_cart():
 @app.route('/budget', methods = ['GET', 'POST'])
 def budget(): 
     if request.method == 'POST':
-        username = session['username']
         print(request.form)
-        budget = request.form['monthly_budget']
-        print(username)
-        print(budget)
-        cursor = cnx.cursor(buffered = True)
-        changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
-        cursor.execute(changeBudget, (budget, username,))
-        cnx.commit()
-        cursor.close()
+        if 'change_budget' in request.form:
+            username = session['username']
+            budget = request.form['monthly_budget']
+            print(username)
+            print(budget)
+            cursor = cnx.cursor(buffered = True)
+            changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
+            cursor.execute(changeBudget, (budget, username,))
+            cnx.commit()
+            cursor.close()
+        if 'add_to_budget' in request.form:
+            username = session['username']
+            print(username)
+            #1. Get budget
+            cursor = cnx.cursor(buffered = True)
+            getBudget = "SELECT monthly_budget FROM user WHERE username = %s"
+            cursor.execute(getBudget, (username,))
+            budget = cursor.fetchone()
+            budget = budget[0]
+            print(budget) 
+            add_to_budget = request.form['add_to_budget_i']
+    
+            changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
+            newBudget = budget + int(add_to_budget)
+            cursor.execute(changeBudget, (newBudget, username,))
     return render_template('budget.html')
 if __name__ == "__main__":
     app.debug = True
