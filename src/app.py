@@ -154,11 +154,14 @@ def purchase():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
-                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
-                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                             <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
@@ -329,10 +332,12 @@ def showCart():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                        <ul>
-                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+             <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
-                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
@@ -468,6 +473,91 @@ def transferCart(transactionID):
 
     cursor.close()
 
+def showShop(isHighToLow, msg):
+    print("msg") 
+    print(msg)
+    cursor = cnx.cursor(buffered=True)
+    getItems = ""
+    if(isHighToLow):
+        getItems = "SELECT item_id, name, price FROM item ORDER BY price DESC"
+    else:
+        getItems = "SELECT item_id, name, price FROM item ORDER BY price ASC"
+
+    htmlprologue = '''<html lang="en">
+    <head>
+        <title> payment </title>
+        <link rel="stylesheet" href="../static/style.css">
+    </head>
+    <body>
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1> 
+                <ul>
+               <li class="active"><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+                </ul>
+            </div>
+            <div class="content" align="center">
+            <h1>{{msg}}</h1>
+            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
+            <input type="submit" class "btn" value="Low to High" name="Low to High">
+                <input type="submit" class "btn" value="High to Low" name="High to Low">
+                </form>
+    '''
+    cursor.execute(getItems)
+    carttable = "<table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr>"
+    for (item_id, name, price) in cursor:
+        print(item_id)
+        print(name)
+        print(price)
+
+
+        carttable += '''<tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>%s</td>''' % name
+        carttable += "<td>%s</td>" % price
+    
+        #carttable += '''<td><label for="%s">%s</p> '''
+        carttable += '''          <input type="hidden" name="item_name" value="%s"></td>''' % name
+        carttable += '''
+                    <td>
+                        <select name="quantity"> 
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        </select>
+                        
+                        <input type="submit" class="btn" value="Add">
+                        </td></tr></form>
+            
+                ''' 
+
+    cursor.close()
+    carttable += "</table></br>"
+
+    htmlepilogue = '''</div>
+        
+    </div>
+</body>
+</html>'''
+    f = open("templates/shop.html", "w")
+    f.write(htmlprologue)
+    f.write(carttable)
+    f.write(htmlepilogue)
+    f.close()
+
+
 # registers a new user and inserts data into database
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -499,181 +589,83 @@ def register():
 
 @app.route('/shop', methods=['GET', 'POST'])
 def shop():
+    msg = ''
     print("in shop")
     if request.method == 'GET':
-        cursor = cnx.cursor(buffered=True)
-
-        getItems = "SELECT item_id, name, price FROM item"
-
-        htmlprologue = '''<html lang="en">
-        <head>
-            <title> payment </title>
-            <link rel="stylesheet" href="../static/style.css">
-        </head>
-        <body>
-            <div class="one">
-                <div class="sidebar">
-                    <h1>Menu</h1> 
-                    <ul>
-                        <li><a href="{{url_for('shop')}}">Shop</a></li>
-                        <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                        <li><a href="{{url_for('budget')}}">Budget</a></li>
-                        <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                        <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                        <li><a href="{{url_for('logout')}}">Logout</a></li>
-                    </ul>
-                </div>
-                <div class="content" align="center">
-        '''
-        cursor.execute(getItems)
-        carttable = "<table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr>"
-        for (item_id, name, price) in cursor:
-            print(item_id)
-            print(name)
-            print(price)
-
-
-            carttable += '''<tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>%s</td>''' % name
-            carttable += "<td>%s</td>" % price
-        
-            #carttable += '''<td><label for="%s">%s</p> '''
-            carttable += '''          <input type="hidden" name="item_name" value="%s"></td>''' % name
-            carttable += '''
-                        <td>
-                            <select name="quantity"> 
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            </select>
-                           
-                            <input type="submit" class="btn" value="Add">
-                         </td></tr></form>
-                
-                    ''' 
-
-        cursor.close()
-        carttable += "</table></br>"
-
-        htmlepilogue = '''</div>
-            
-        </div>
-    </body>
-</html>'''
-        f = open("templates/shop.html", "w")
-        f.write(htmlprologue)
-        f.write(carttable)
-        f.write(htmlepilogue)
-        f.close()
-
+       showShop(0, msg)
+       print(request.form)
     if request.method == 'POST':
-        print("post:")
-        cursor = cnx.cursor(buffered=True)
-        print("after cursor")
-        username = session['username']
-        print("after requesting username")
+        print("POST")
+        if "High to Low" in request.form:
+            #high to low
+            print("HIGH")
+            showShop(1, msg)
+        if "Low to High" in request.form:
+            print("LOW")
 
-        name = request.form['item_name']
-        print("after requesting item_name")
+            showShop(0, msg)
+        if "Add" in request.form:
+            print("post:")
+            cursor = cnx.cursor(buffered=True)
+            print("after cursor")
+            username = session['username']
+            print("after requesting username")
 
-        quantity = request.form['quantity']
-        print("after requesting quantity")
+            name = request.form['item_name']
+            print("after requesting item_name")
 
-        print("after requesting form elements")
-        findPrice = "SELECT price FROM item WHERE name = %s"
-        cursor.execute(findPrice, (name,))
-        print("after first query execution")
+            quantity = request.form['quantity']
+            print("after requesting quantity")
 
-        price = cursor.fetchone()
-        print("name:")
-        print(name)
-        print(quantity)
-        print(findPrice)
-        print("Adding item to cart")
-        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
-        cursor.execute(findItemId, (name,))
-        item_id = cursor.fetchone()
-        print("item_id:")
-        print(item_id[0])
-       # print(username)
-        findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
-        cursor.execute(findItem, (username, item_id[0]))
-        it = cursor.fetchone()
-        print("it: ")
-        print(it)
+            print("after requesting form elements")
+            findPrice = "SELECT price FROM item WHERE name = %s"
+            cursor.execute(findPrice, (name,))
+            print("after first query execution")
 
-        if(it is None):
-            print("item isnt in shopping cart")
-            addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
-            cursor.execute(addToShoppingCart,
-                           (item_id[0], username, quantity,))
-        else:
-            print("item is in shopping cart")
+            price = cursor.fetchone()
+            print("name:")
+            print(name)
+            print(quantity)
+            print(findPrice)
+            print("Adding item to cart")
+            findItemId = "SELECT item_id FROM item WHERE item.name = %s"
+            cursor.execute(findItemId, (name,))
+            item_id = cursor.fetchone()
+            print("item_id:")
+            print(item_id[0])
+        # print(username)
+            findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
+            cursor.execute(findItem, (username, item_id[0]))
+            it = cursor.fetchone()
+            print("it: ")
+            print(it)
+            msg = 'Added item'
+            if(it is None):
+                print("item isnt in shopping cart")
+                addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+                cursor.execute(addToShoppingCart,
+                            (item_id[0], username, quantity,))
+                
+            else:
+                print("item is in shopping cart")
 
-            item = cursor.fetchone()
-            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-            cursor.execute(getQuantity, (item_id[0], username,))
-            quantity = cursor.fetchone()
-            print(quantity[0])
-            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-            cursor.execute(
-                updateQuantity, (quantity[0]+1, item_id[0], username, ))
-        cnx.commit()
-        cursor.close()
+                item = cursor.fetchone()
+                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+                cursor.execute(getQuantity, (item_id[0], username,))
+                quantity = cursor.fetchone()
+                print(quantity[0])
+                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+                cursor.execute(
+                    updateQuantity, (quantity[0]+1, item_id[0], username, ))
+            print("msg")
+            
+            print(msg)
+            cnx.commit()
+            cursor.close()
        # addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
         #cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
-    return render_template('shop.html')
-
-
-@app.route('/shopping_cart', methods=['GET', 'POST'])
-def shopping_cart():
-    print("IN SHOPPING CART WOHOO")
-    hello = "<h1> WHASSUPPPPPP </h1>"
-    f = open("shopping_cart.html", "w")
-    f.write(hello)
-
-    username = session['username']
-    if request.method == 'POST':
-        cursor = cnx.cursor(buffered=True)
-        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
-        cursor.execute(findItemId, (name,))
-        item_id = cursor.fetchone()
-        # print(request.form.get("Remove"))
-        if 'Remove' in request.form:
-            print("REMOVE")
-            print("after username")
-            print(request.form)
-            name = request.form['item_name']
-            print("item_id:")
-            print(item_id[0])
-
-          #  deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-           # cursor.execute(deleteItem, (item_id[0], username,))
-        elif 'Change Quantity' in request.form:
-            print("CHANGE QUANTITY")
-            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-            cursor.execute(getQuantity, (item_id[0], username,))
-            quantity = cursor.fetchone()
-            print(quantity[0])
-            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-            cursor.execute(
-                updateQuantity, (quantity[0]+1, item_id[0], username, ))
-
-        cursor = cnx.cursor(buffered=True)
-        findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
-        cursor.execute(findBudget, (username,))
-        budget = cursor.fetchone()
-        print(budget[0])
-        findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
-        itemsIds = cursor.fetchall()
-    return render_template('shopping_cart.html')
+    return render_template('shop.html', msg=msg)
 
 
 def cart_total():
@@ -754,11 +746,14 @@ def transaction_history():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
-                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
-                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                           <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li class="active"><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
@@ -804,13 +799,15 @@ def admin():
                                     <div class="one">
                                         <div class="sidebar">
                                             <h1>Menu</h1>
-                                        <ul>
-                        <li><a href="{{url_for('shop')}}">Shop</a></li>
-                    <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                    <li><a href="{{url_for('budget')}}">Budget</a></li>
-                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                    <li><a href="{{url_for('logout')}}">Logout</a></li>
+                    <ul>
+                     <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                     </ul>
                                         </div>
                                         <div class="content" align="center">
@@ -882,10 +879,12 @@ def showAdmin():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                     <ul>
-                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+                  <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
                 <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
