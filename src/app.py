@@ -952,16 +952,16 @@ def admin():
         carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
         cartcursor = cnx.cursor(buffered=True)
         cartcursor.execute("set session transaction isolation level read committed")
-        cartquery = "SELECT name, price FROM item "
-        cartcursor.execute(cartquery)
 
-        #  cartSnippet = cartcursor.fetchone
+        cartcursor.callproc('getItem')
+        for result in cartcursor.stored_results():
+            list = result.fetchall()
 
-        for (item, price) in cartcursor:
-            carttable += "<tr><td>%s</td>" % item
-            carttable += "<td>%s</td>" % price
-            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+            for (item, price) in list:
+                carttable += "<tr><td>%s</td>" % item
+                carttable += "<td>%s</td>" % price
+                carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+                carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
         cartcursor.close()
         carttable += "</table></br>"
@@ -981,7 +981,7 @@ def admin():
             item = cursor.callproc('getItemFromName', [name, 0])
             item_id = item[1]
             new_price = request.form['new_price']
-            
+
             updatePrice = "UPDATE item SET price=%s WHERE item_id = %s "
             cursor.execute(updatePrice, (new_price, item_id, ))
             cursor.close()
@@ -1030,16 +1030,16 @@ def showAdmin():
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
     cartcursor.execute("set session transaction isolation level read committed")
-    cartquery = "SELECT name, price FROM item "
-    cartcursor.execute(cartquery)
 
-    #  cartSnippet = cartcursor.fetchone
+    cartcursor.callproc('getItem')
+    for result in cartcursor.stored_results():
+        list = result.fetchall()
 
-    for (item, price) in cartcursor:
-        carttable += "<tr><td>%s</td>" % item
-        carttable += "<td>%s</td>" % price
-        carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-        carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+        for (item, price) in list:
+            carttable += "<tr><td>%s</td>" % item
+            carttable += "<td>%s</td>" % price
+            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
     cartcursor.close()
     carttable += "</table></br>"
