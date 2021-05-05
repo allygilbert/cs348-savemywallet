@@ -878,6 +878,9 @@ def transaction_history():
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
+                                        <div class="header">
+                                            <h1>Transaction History</h1>
+                                        </div></br></br>
                                        '''
     htmlepilogue = '''
                         </div>
@@ -885,22 +888,29 @@ def transaction_history():
                 </body>
             </html>'''
 
-    carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
-
     cartcursor = cnx.cursor(buffered=True)
     cartcursor.execute("set session transaction isolation level read committed")
     cartquery = "SELECT username, transaction_id, payment_id, date FROM purchase WHERE username = %s"
     cartcursor.execute(cartquery, (session['username'],))
 
-    #  cartSnippet = cartcursor.fetchone
+    count = 0;
+    carttable = ""
 
     for (username, transaction_id, payment_id, date) in cartcursor:
+        if count == 0:
+            carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
+            count = count + 1
+
         carttable += "<tr><td>%s</td>" % username
         carttable += "<td>%s</td>" % transaction_id
         carttable += "<td>%s</td>" % payment_id
         carttable += "<td>%s</td>" % date
     cartcursor.close()
-    carttable += "</tr></table></br>"
+
+    if count == 0:  # not previous transactions
+        carttable = '''<p class="worddark">No previous transactions to display.</p>'''
+    else:
+        carttable += "</tr></table></br>"
     f = open("templates/transaction_history.html", "w")
     f.write(htmlprologue)
     f.write(carttable)
