@@ -539,17 +539,20 @@ def transferCart(transactionID):
     # repeatable read b/c insert affects multiple rows but phantom data is
     # not a concern since each transaction will have a different id number
     cursor.execute("set session transaction isolation level repeatable read")
-    cartquery = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
-    cursor.execute(cartquery, (session['username'],))
+    cursor.callproc('getCartDetails', [session['username']])
 
-    count = 0
-    insertquery = "INSERT INTO item_transaction VALUES "
-    for (item, quantity) in cursor:
-        if count == 0:
-            insertquery += "(%s, %s, %s)" % (item, transactionID, quantity)
-            count += 1
-        else:
-            insertquery += ", (%s, %s, %s)" % (item, transactionID, quantity)
+    insertquery = ""
+    for result in cursor.stored_results():
+        list = result.fetchall()
+
+        count = 0
+        insertquery += "INSERT INTO item_transaction VALUES "
+        for (item, quantity) in list:
+            if count == 0:
+                insertquery += "(%s, %s, %s)" % (item, transactionID, quantity)
+                count += 1
+            else:
+                insertquery += ", (%s, %s, %s)" % (item, transactionID, quantity)
 
     # insert items into item_transaction relation
     cursor.execute(insertquery)
@@ -767,15 +770,18 @@ def cart_total():
     total = 0
     cursor = cnx.cursor(buffered=True)
     cursor.execute("set session transaction isolation level read committed")
-    find_id_and_quantity = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
-    cursor.execute(find_id_and_quantity, (session['username'],))
+    cursor.callproc('getCartDetails', [session['username']])
 
-    for (item_id, quantity) in cursor:
-        # for all items, add price * quantity to total
-        find_price = "SELECT price FROM item WHERE item_id = %s"
-        cursor.execute(find_price, (item_id,))
-        price = cursor.fetchone()[0]
-        total += price * quantity
+    insertquery = ""
+    for result in cursor.stored_results():
+        list = result.fetchall()
+
+        for (item_id, quantity) in list:
+            # for all items, add price * quantity to total
+            find_price = "SELECT price FROM item WHERE item_id = %s"
+            cursor.execute(find_price, (item_id,))
+            price = cursor.fetchone()[0]
+            total += price * quantity
     print(total)
     cursor.close()
     return total
