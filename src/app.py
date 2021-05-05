@@ -218,7 +218,7 @@ def purchase():
                                             <div class="msg">{{ msg }}</div>
                                             <h1>Cart Contents</h1></br>'''
             htmlmiddle = '''<h1>Payment Method</h1></br>'''
-            htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">
+            htmlepilogue = '''
                             </div>
                         </div>
                     </div>
@@ -226,9 +226,9 @@ def purchase():
             </html>'''
 
             # create html table for cart info
-            carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
-            cartcursor = cnx.cursor(buffered=True)
             
+            cartcursor = cnx.cursor(buffered=True)
+
             # read committed b/c do not want to read data that has not been committed
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
@@ -236,18 +236,27 @@ def purchase():
             cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
             cartcursor.execute(cartquery, (session['username'],))
 
-          #  cartSnippet = cartcursor.fetchone
-
+            carttable = ""
+            count = 0 
             for (item, price, quantity) in cartcursor:
+                if count == 0:
+                    carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+                    count = count + 1
+
                 carttable += "<tr><td>%s</td>" % item
                 carttable += "<td>%s</td>" % price
                 carttable += "<td>%s</td>" % quantity
                 carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
 
                 carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
-
+            
+            if count == 0:  # no items in cart
+                carttable = '''<p class="worddark">Please add items to the shopping cart before proceeding to checkout.</p></br></br>'''
+            else:
+                carttable += "</table></br>"
+                
             cartcursor.close()
-            carttable += "</table></br>"
+            
 
             # create html for payment info
             paymentcursor = cnx.cursor(buffered=True)
@@ -261,20 +270,26 @@ def purchase():
             payment = paymentcursor.fetchone()
             paymentcursor.close()
 
-            paymentinfo = '''<table>
-                                <tr>
-                                    <td class='worddark'>Card Number</td>
-                                    <td>%s</td>
-                                </tr>
-                                <tr>
-                                    <td class='worddark'>Name on Card</td>
-                                    <td>%s</td>
-                                </tr>
-                                <tr>
-                                    <td class='worddark'>Expiration Date</td>
-                                    <td>%s</td>
-                                </tr>
-                            </table></br>''' % (payment[0], payment[1], payment[2])
+            paymentinfo = ""
+            if payment:
+                paymentinfo = '''<table>
+                                    <tr>
+                                        <td class='worddark'>Card Number</td>
+                                        <td>%s</td>
+                                    </tr>
+                                    <tr>
+                                        <td class='worddark'>Name on Card</td>
+                                        <td>%s</td>
+                                    </tr>
+                                    <tr>
+                                        <td class='worddark'>Expiration Date</td>
+                                        <td>%s</td>
+                                    </tr>
+                                </table></br>''' % (payment[0], payment[1], payment[2])
+                htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">''' + htmlepilogue
+            else:
+                htmlepilogue = '''<p class="worddark">Please enter a payment method before proceeding to checkout.</p>''' + htmlepilogue
+
 
             # write html file
             f = open("templates/purchase.html", "w")
