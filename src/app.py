@@ -132,9 +132,11 @@ def paymentmethod():
         # (i.e. if register() has inserted a new user but not yet committed)
         # assuming only one instance per username so no need for repeatable read
         checkcursor.execute("set session transaction isolation level read committed")
-        query = "SELECT * FROM payment WHERE username = %s"
-        checkcursor.execute(query, (username,))
-        payment = checkcursor.fetchone()
+        checkcursor.callproc('getPaymentFromUsername', [username])
+        payment = None
+        for result in checkcursor.stored_results():
+            payment = result.fetchone()
+
         checkcursor.close()
 
         if payment:
@@ -152,9 +154,11 @@ def paymentmethod():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             cursor.execute("set session transaction isolation level read committed")
-            query = "SELECT * FROM payment WHERE username = %s"
-            cursor.execute(query, (username,))
-            account = cursor.fetchone()
+            cursor.callproc('getPaymentFromUsername', [username])
+            account = None
+            for result in cursor.stored_results():
+                account = result.fetchone()
+
             cursor.close()
             if account:
                 # TODO: account can only have one payment method ???
@@ -265,9 +269,10 @@ def purchase():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             paymentcursor.execute("set session transaction isolation level read committed")
-            paymentquery = "SELECT * FROM payment WHERE username = %s"
-            paymentcursor.execute(paymentquery, (session['username'],))
-            payment = paymentcursor.fetchone()
+            paymentcursor.callproc('getPaymentFromUsername', [session['username']])
+            payment = None
+            for result in paymentcursor.stored_results():
+                payment = result.fetchone()
             paymentcursor.close()
 
             paymentinfo = ""
@@ -442,9 +447,10 @@ def showCart():
     # read committed b/c do not want to read data that has not been committed
     # assuming only one instance per username so no need for repeatable read
     paymentcursor.execute("set session transaction isolation level read committed")
-    paymentquery = "SELECT * FROM payment WHERE username = %s"
-    paymentcursor.execute(paymentquery, (session['username'],))
-    payment = paymentcursor.fetchone()
+    paymentcursor.callproc('getPaymentFromUsername', [session['username']])
+    payment = None
+    for result in paymentcursor.stored_results():
+        payment = result.fetchone()
     paymentcursor.close()
 
     paymentinfo = '''<table>
