@@ -312,13 +312,13 @@ def purchase():
                 # and do not want other transactions accessing these rows until
                 # the delete or update is complete
                 cursor.execute("set session transaction isolation level serializable")
+
                 name = request.form['item_name']
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
 
                 deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-                cursor.execute(deleteItem, (item_id[0], username,))
+                cursor.execute(deleteItem, (item_id, username,))
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -332,15 +332,11 @@ def purchase():
                 cursor.execute("set session transaction isolation level serializable")
                 
                 name = request.form['item_name']
-                print(name)
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                print("CHANGE QUANTITY")
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
+                
                 getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
+                cursor.execute(getQuantity, (item_id, username,))
                 quantity = cursor.fetchone()
                 print(quantity[0])
                 print(request.form)
@@ -350,7 +346,7 @@ def purchase():
                     new_quantity = quantity[0]
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
-                    updateQuantity, (new_quantity, item_id[0], username, ))
+                    updateQuantity, (new_quantity, item_id, username, ))
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -980,17 +976,14 @@ def admin():
         if "Change Price" in request.form:
             cursor = cnx.cursor(buffered=True)
             cursor.execute("set session transaction isolation level serializable")
-            print("change price :)")
+
             name = request.form['item_name']
-            findItemId = "SELECT item_id FROM item WHERE name = %s"
-            cursor.execute(findItemId, (name,))
-            item_id = cursor.fetchone()
-            print("item_id:")
-            print(item_id[0])
+            item = cursor.callproc('getItemFromName', [name, 0])
+            item_id = item[1]
             new_price = request.form['new_price']
-            # print(price)
+            
             updatePrice = "UPDATE item SET price=%s WHERE item_id = %s "
-            cursor.execute(updatePrice, (new_price, item_id[0], ))
+            cursor.execute(updatePrice, (new_price, item_id, ))
             cursor.close()
             cnx.commit()
             showAdmin()
