@@ -630,7 +630,7 @@ def showShop(isHighToLow, msg):
                         <option value="10">10</option>
                         </select>
                         
-                        <input type="submit" class="btn" value="Add">
+                        <input type="submit" class="btn" value="Add" name="Add">
                         </td></tr></form>
             
                 ''' 
@@ -831,6 +831,7 @@ def budget():
 
             changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
             newBudget = budget + int(add_to_budget)
+            print(newBudget)
             cursor.execute(changeBudget, (newBudget, username,))
     return render_template('budget.html', remaining_budget=remaining_budget)
 
