@@ -22,6 +22,11 @@ def login():
         budget = request.form['monthlybudget']
 
         cursor = cnx.cursor(buffered=True)
+        
+        # read committed b/c do not want to read data that has not been committed
+        # (i.e. if register() has inserted a new user but not yet committed)
+        # assuming only one instance per username so no need for repeatable read
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT username, monthly_budget FROM user WHERE username = %s and monthly_budget = %s"
         cursor.execute(query, (username, budget,))
         account = cursor.fetchone()
@@ -61,6 +66,11 @@ def delete():
                 budget = request.form['monthlybudget']
                 
                 cursor = cnx.cursor(buffered = True)
+                
+                # read committed b/c do not want to read data that has not been committed
+                # (i.e. if register() has inserted a new user but not yet committed)
+                # assuming only one instance per username so no need for repeatable read
+                cursor.execute("set session transaction isolation level read committed")
                 query = "SELECT username, monthly_budget FROM user WHERE username = %s"
                 cursor.execute(query, (username,))
                 account = cursor.fetchone()
@@ -69,6 +79,11 @@ def delete():
                     # confirm monthly budget
                     if float(budget) == float(account[1]):
                         deletecursor = cnx.cursor(buffered = True)
+                        
+                        # repeatable read because user could be trying to delete account
+                        # as another user is trying to register with same username
+                        # only affects one row since username is key so no need for serializable
+                        deletecursor.execute("set session transaction isolation level repeatable read")
                         query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
                         deletecursor.execute(query, (username, budget,))
                         cnx.commit()
@@ -96,6 +111,7 @@ def index():
         username = request.form['username']
         budget = request.form['monthlybudget']
         cursor = cnx.cursor(buffered=True)
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
@@ -111,6 +127,11 @@ def paymentmethod():
     if 'loggedin' in session:
         username = session['username']
         checkcursor = cnx.cursor(buffered = True)
+        
+        # read committed b/c do not want to read data that has not been committed
+        # (i.e. if register() has inserted a new user but not yet committed)
+        # assuming only one instance per username so no need for repeatable read
+        checkcursor.execute("set session transaction isolation level read committed")
         query = "SELECT * FROM payment WHERE username = %s"
         checkcursor.execute(query, (username,))
         payment = checkcursor.fetchone()
@@ -126,6 +147,11 @@ def paymentmethod():
             expirationDate = request.form['expirationDate']
 
             cursor = cnx.cursor(buffered=True)
+            
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            cursor.execute("set session transaction isolation level read committed")
             query = "SELECT * FROM payment WHERE username = %s"
             cursor.execute(query, (username,))
             account = cursor.fetchone()
@@ -137,6 +163,10 @@ def paymentmethod():
             else:
                 # insert account payment method
                 insertcursor = cnx.cursor(buffered=True)
+                
+                # read committed b/c do not want other transactions to read uncommitted data
+                # repeatable read non necessary since only references one row
+                insertcursor.execute("set session transaction isolation level read committed")
                 query = "INSERT INTO payment VALUES (%s, %s, %s, %s)"
                 insertcursor.execute(
                     query, (cardNumber, username, cardholderName, expirationDate,))
@@ -198,6 +228,11 @@ def purchase():
             # create html table for cart info
             carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
             cartcursor = cnx.cursor(buffered=True)
+            
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            cartcursor.execute("set session transaction isolation level read committed")
             cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
             cartcursor.execute(cartquery, (session['username'],))
 
@@ -216,6 +251,11 @@ def purchase():
 
             # create html for payment info
             paymentcursor = cnx.cursor(buffered=True)
+            
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            paymentcursor.execute("set session transaction isolation level read committed")
             paymentquery = "SELECT * FROM payment WHERE username = %s"
             paymentcursor.execute(paymentquery, (session['username'],))
             payment = paymentcursor.fetchone()
@@ -252,6 +292,11 @@ def purchase():
             print(request.form)
             if 'Remove' in request.form:
                 cursor = cnx.cursor(buffered=True)
+                
+                # serializable b/c affects multiple rows through multiple queries
+                # and do not want other transactions accessing these rows until
+                # the delete or update is complete
+                cursor.execute("set session transaction isolation level serializable")
                 print("REMOVE")
                 print("after username")
                 print(request.form)
@@ -287,6 +332,11 @@ def purchase():
 
             if 'Change Quantity' in request.form:
                 cursor = cnx.cursor(buffered=True)
+                
+                # serializable b/c affects multiple rows through multiple queries
+                # and do not want other transactions accessing these rows until
+                # update is complete
+                cursor.execute("set session transaction isolation level serializable")
                 
                 name = request.form['item_name']
                 print(name)
@@ -330,6 +380,10 @@ def purchase():
 
 def clearCart():
     cursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c delete affects multiple rows and do not want to
+    # purchase the same cart multiple times accidentally
+    cursor.execute("set session transaction isolation level serializable")
     query = "DELETE FROM shopping_cart WHERE username = %s"
     cursor.execute(query, (session['username'],))
     cnx.commit()
@@ -375,6 +429,10 @@ def showCart():
     # create html table for cart info
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c select affects multiple rows and do not want another
+    # transaction to insert into shopping cart until this action is done
+    cartcursor.execute("set session transaction isolation level serializable")
     cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
     cartcursor.execute(cartquery, (session['username'],))
 
@@ -391,6 +449,10 @@ def showCart():
     carttable += "</table></br>"
     # create html for payment info
     paymentcursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want to read data that has not been committed
+    # assuming only one instance per username so no need for repeatable read
+    paymentcursor.execute("set session transaction isolation level read committed")
     paymentquery = "SELECT * FROM payment WHERE username = %s"
     paymentcursor.execute(paymentquery, (session['username'],))
     payment = paymentcursor.fetchone()
@@ -424,6 +486,10 @@ def showCart():
 def createNewTransaction():
     # get next transaction ID number
     cursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c do not want phantom data if another user tries to
+    # perform another transaction at the same time
+    cursor.execute("set session transaction isolation level serializable")
     query = "SELECT transaction_id FROM transaction ORDER BY transaction_id DESC"
     cursor.execute(query)
     latestTransaction = cursor.fetchone()
@@ -455,6 +521,10 @@ def createNewTransaction():
 
 def storePurchase(transactionID):
     cursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want other transactions to read uncommitted data
+    # repeatable read non necessary since only references one row
+    cursor.execute("set session transaction isolation level repeatable read")
 
     # get payment info
     paymentquery = "SELECT payment_id FROM payment WHERE username = %s"
@@ -471,6 +541,10 @@ def storePurchase(transactionID):
 def transferCart(transactionID):
     # get cart items
     cursor = cnx.cursor(buffered=True)
+    
+    # repeatable read b/c insert affects multiple rows but phantom data is
+    # not a concern since each transaction will have a different id number
+    cursor.execute("set session transaction isolation level repeatable read")
     cartquery = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
     cursor.execute(cartquery, (session['username'],))
 
@@ -492,6 +566,10 @@ def showShop(isHighToLow, msg):
     print("msg") 
     print(msg)
     cursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want to read uncommitted data and updates
+    # to items will not happen often (only admins can update price)
+    cursor.execute("set session transaction isolation level read committed")
     getItems = ""
     if(isHighToLow):
         getItems = "SELECT item_id, name, price FROM item ORDER BY price DESC"
@@ -582,6 +660,8 @@ def register():
         budget = request.form['monthlybudget']
 
         cursor = cnx.cursor(buffered=True)
+        
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
@@ -590,6 +670,7 @@ def register():
             msg = 'Username already exists.'
         else:
             insertcursor = cnx.cursor(buffered=True)
+            insertcursor.execute("set session transaction isolation level repeatable read")
             query = "INSERT INTO user VALUES (%s, %s)"
             insertcursor.execute(query, (username, budget,))
             cnx.commit()
@@ -622,6 +703,7 @@ def shop():
         if "Add" in request.form:
             print("post:")
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             print("after cursor")
             username = session['username']
             print("after requesting username")
@@ -687,6 +769,7 @@ def cart_total():
     # find all items
     total = 0
     cursor = cnx.cursor(buffered=True)
+    cursor.execute("set session transaction isolation level read committed")
     find_id_and_quantity = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
     cursor.execute(find_id_and_quantity, (session['username'],))
 
@@ -697,18 +780,21 @@ def cart_total():
         price = cursor.fetchone()[0]
         total += price * quantity
     print(total)
+    cursor.close()
     return total
 
 
 def compute_remaining_budget(cart_total):
     # find budget
     cursor = cnx.cursor(buffered=True)
+    cursor.execute("set session transaction isolation level read committed")
     find_budget = "SELECT monthly_budget FROM user WHERE username = %s"
     cursor.execute(find_budget, (session['username'],))
     budget = cursor.fetchone()[0]
     print(budget)
     remaining_budget = budget - cart_total
     print(remaining_budget)
+    cursor.close()
     return remaining_budget
 
 
@@ -727,6 +813,7 @@ def budget():
             print(username)
             print(budget)
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
             cursor.execute(changeBudget, (budget, username,))
             cnx.commit()
@@ -736,6 +823,7 @@ def budget():
             print(username)
             # 1. Get budget
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             getBudget = "SELECT monthly_budget FROM user WHERE username = %s"
             cursor.execute(getBudget, (username,))
             budget = cursor.fetchone()
@@ -782,6 +870,7 @@ def transaction_history():
     carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
 
     cartcursor = cnx.cursor(buffered=True)
+    cartcursor.execute("set session transaction isolation level read committed")
     cartquery = "SELECT username, transaction_id, payment_id, date FROM purchase WHERE username = %s"
     cartcursor.execute(cartquery, (session['username'],))
 
@@ -843,6 +932,7 @@ def admin():
         # create html table for cart info
         carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
         cartcursor = cnx.cursor(buffered=True)
+        cartcursor.execute("set session transaction isolation level read committed")
         cartquery = "SELECT name, price FROM item "
         cartcursor.execute(cartquery)
 
@@ -866,6 +956,7 @@ def admin():
         username = session['username']
         if "Change Price" in request.form:
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             print("change price :)")
             name = request.form['item_name']
             findItemId = "SELECT item_id FROM item WHERE name = %s"
@@ -922,6 +1013,7 @@ def showAdmin():
     # create html table for cart info
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
+    cartcursor.execute("set session transaction isolation level read committed")
     cartquery = "SELECT name, price FROM item "
     cartcursor.execute(cartquery)
 
