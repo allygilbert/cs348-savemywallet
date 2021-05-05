@@ -349,9 +349,7 @@ def purchase():
                     new_quantity = request.form['new_quantity']
                 else:
                     new_quantity = quantity
-                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                cursor.execute(
-                    updateQuantity, (new_quantity, item_id, username, ))
+                cursor.callproc('updateCartQuantity', [username, item_id, new_quantity])
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -751,9 +749,8 @@ def shop():
                 quantity = quantityItem[2]
 
                 print(quantity)
-                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                cursor.execute(
-                    updateQuantity, (quantity+1, item_id[0], username, ))
+                cursor.callproc('updateCartQuantity', [username, item_id[0], quantity + 1])
+                #TODO will always add 1 even if quantity to add is not equal to 1
             print("msg")
             
             print(msg)
