@@ -312,38 +312,16 @@ def purchase():
                 # and do not want other transactions accessing these rows until
                 # the delete or update is complete
                 cursor.execute("set session transaction isolation level serializable")
-                print("REMOVE")
-                print("after username")
-                print(request.form)
                 name = request.form['item_name']
-                print(name)
                 findItemId = "SELECT item_id FROM item WHERE name = %s"
                 cursor.execute(findItemId, (name,))
                 item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                # find quantity
-                find_quantity = "SELECT quantity FROM shopping_cart WHERE username = %s and item_id = %s"
-                cursor.execute(
-                    find_quantity, (session['username'], item_id[0],))
 
-                quantity = cursor.fetchone()
-                quantity = quantity[0]
-                if(quantity == 1):
-                    print("about to delete item")
-                    deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-                    cursor.execute(deleteItem, (item_id[0], username,))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
-                else:
-                    newQuantity = quantity - 1
-                    updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                    cursor.execute(
-                        updateQuantity, (newQuantity, item_id[0], username, ))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
+                deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+                cursor.execute(deleteItem, (item_id[0], username,))
+                cursor.close()
+                cnx.commit()
+                showCart()
 
             if 'Change Quantity' in request.form:
                 cursor = cnx.cursor(buffered=True)
