@@ -811,6 +811,7 @@ def budget():
     if request.method == 'POST':
         print(request.form)
         if 'change_budget' in request.form:
+            print("change budget")
             username = session['username']
             budget = request.form['monthly_budget']
             print(username)
@@ -821,7 +822,10 @@ def budget():
             cursor.execute(changeBudget, (budget, username,))
             cnx.commit()
             cursor.close()
+            showBudget()
         if 'add_to_budget' in request.form:
+            print("add to budget")
+
             username = session['username']
             print(username)
             # 1. Get budget
@@ -836,8 +840,64 @@ def budget():
             newBudget = budget + int(add_to_budget)
             print(newBudget)
             cursor.execute(changeBudget, (newBudget, username,))
+            showBudget()
     return render_template('budget.html', remaining_budget=remaining_budget)
 
+def showBudget():
+
+    c_total = cart_total()
+    print(c_total)
+    remaining_budget = compute_remaining_budget(c_total)
+    htmlprologue = '''<html lang="en">
+
+<head>
+    <title> payment </title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+
+<body>
+    <div class="one">
+        <div class="sidebar">
+            <h1>Menu</h1>
+            <ul>
+                <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li class="active"><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+            </ul>
+        </div>
+        <div class="content" align="center">
+            <div class="header">
+                <h1>Budget</h1>
+            </div></br></br>
+
+        <form action="" method="post" name="changeBudget" enctype="multipart/form-data">
+            <h3>Remaining budget: (given what's in your cart)</h3>
+            <p class="remaining_budget">%s</p>''' % remaining_budget 
+            
+    htmlepilogue = '''<h3>Add to budget (in $): </h3>
+            <input name="add_to_budget_i" placeholder="5">
+            <input type="submit" name="add_to_budget">
+            <h2>OR</h2>
+            <h3>Change Monthly budget to (in $):</h3>
+            <input type="number" name="monthly_budget" placeholder="10">
+            <input type="submit" name="change_budget">
+
+        </form>
+        </div>
+    </div>
+
+</body>
+
+</html>'''
+    f = open("templates/budget.html", "w")
+    f.write(htmlprologue)
+    f.write(htmlepilogue)
+    f.close()
 
 @app.route('/transaction_history', methods=['GET', 'POST'])
 def transaction_history():
