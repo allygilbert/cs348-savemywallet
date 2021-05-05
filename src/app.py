@@ -597,6 +597,9 @@ def showShop(isHighToLow, msg):
                 </ul>
             </div>
             <div class="content" align="center">
+            <div class="header">
+                    <h1>Shop</h1>
+                </div></br></br>
             <h1>{{msg}}</h1>
             <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
             <input type="submit" class "btn" value="Low to High" name="Low to High">
