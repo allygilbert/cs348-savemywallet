@@ -342,15 +342,13 @@ def purchase():
                 item = cursor.callproc('getItemFromName', [name, 0])
                 item_id = item[1]
                 
-                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id, username,))
-                quantity = cursor.fetchone()
-                print(quantity[0])
-                print(request.form)
+                quantityItem = cursor.callproc('getQuantityFromCart', [session['username'], item_id, 0])
+                quantity = quantityItem[1]
+
                 if not request.form['new_quantity'] == '':
                     new_quantity = request.form['new_quantity']
                 else:
-                    new_quantity = quantity[0]
+                    new_quantity = quantity
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
                     updateQuantity, (new_quantity, item_id, username, ))
@@ -430,7 +428,6 @@ def showCart():
     # transaction to insert into shopping cart until this action is done
     cartcursor.execute("set session transaction isolation level serializable")
     cartcursor.callproc('getCartFromUsername', [session['username']])
-    carttable = ""
     count = 0 
 
     for result in cartcursor.stored_results():
@@ -749,13 +746,14 @@ def shop():
                 print("item is in shopping cart")
 
                 item = cursor.fetchone()
-                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
-                quantity = cursor.fetchone()
-                print(quantity[0])
+
+                quantityItem = cursor.callproc('getQuantityFromCart', [session['username'], item_id, 0])
+                quantity = quantityItem[1]
+                print(quantity)
+
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
-                    updateQuantity, (quantity[0]+1, item_id[0], username, ))
+                    updateQuantity, (quantity+1, item_id[0], username, ))
             print("msg")
             
             print(msg)
