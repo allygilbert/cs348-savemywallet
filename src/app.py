@@ -22,6 +22,11 @@ def login():
         budget = request.form['monthlybudget']
 
         cursor = cnx.cursor(buffered=True)
+        
+        # read committed b/c do not want to read data that has not been committed
+        # (i.e. if register() has inserted a new user but not yet committed)
+        # assuming only one instance per username so no need for repeatable read
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT username, monthly_budget FROM user WHERE username = %s and monthly_budget = %s"
         cursor.execute(query, (username, budget,))
         account = cursor.fetchone()
@@ -53,28 +58,43 @@ def delete():
     if 'loggedin' in session:
         if request.method == 'POST' and 'username' in request.form and 'monthlybudget' in request.form:
             username = request.form['username']
-            budget = request.form['monthlybudget']
 
-            cursor = cnx.cursor(buffered=True)
-            query = "SELECT username, monthly_budget FROM user WHERE username = %s"
-            cursor.execute(query, (username,))
-            account = cursor.fetchone()
-            cursor.close()
-            if account:
-                # confirm monthly budget
-                if float(budget) == float(account[1]):
-                    deletecursor = cnx.cursor(buffered=True)
-                    query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
-                    deletecursor.execute(query, (username, budget,))
-                    cnx.commit()
-                    msg = 'Account successfully deleted.'
-                    deletecursor.close()
-                    return redirect(url_for('login'))
+            if username != session['username']:
+                msg = 'Incorrect username.'
+            
+            else: 
+                budget = request.form['monthlybudget']
+                
+                cursor = cnx.cursor(buffered = True)
+                
+                # read committed b/c do not want to read data that has not been committed
+                # (i.e. if register() has inserted a new user but not yet committed)
+                # assuming only one instance per username so no need for repeatable read
+                cursor.execute("set session transaction isolation level read committed")
+                query = "SELECT username, monthly_budget FROM user WHERE username = %s"
+                cursor.execute(query, (username,))
+                account = cursor.fetchone()
+                cursor.close()
+                if account:
+                    # confirm monthly budget
+                    if float(budget) == float(account[1]):
+                        deletecursor = cnx.cursor(buffered = True)
+                        
+                        # repeatable read because user could be trying to delete account
+                        # as another user is trying to register with same username
+                        # only affects one row since username is key so no need for serializable
+                        deletecursor.execute("set session transaction isolation level repeatable read")
+                        query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
+                        deletecursor.execute(query, (username, budget,))
+                        cnx.commit()
+                        msg = 'Account successfully deleted.'
+                        deletecursor.close()
+                        return redirect(url_for('login'))
+                    else:
+                        msg = 'Incorrect monthly budget.'
                 else:
-                    msg = 'Incorrect monthly budget.'
-            else:
-                msg = 'Username does not exist.'
-
+                    msg = 'Username does not exist.'
+        
         elif request.method == 'POST':
             msg = 'Please fill in the empty fields.'
 
@@ -91,6 +111,7 @@ def index():
         username = request.form['username']
         budget = request.form['monthlybudget']
         cursor = cnx.cursor(buffered=True)
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
@@ -104,13 +125,33 @@ def index():
 def paymentmethod():
     msg = ''
     if 'loggedin' in session:
-        if request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
-            username = session['username']
+        username = session['username']
+        checkcursor = cnx.cursor(buffered = True)
+        
+        # read committed b/c do not want to read data that has not been committed
+        # (i.e. if register() has inserted a new user but not yet committed)
+        # assuming only one instance per username so no need for repeatable read
+        checkcursor.execute("set session transaction isolation level read committed")
+        query = "SELECT * FROM payment WHERE username = %s"
+        checkcursor.execute(query, (username,))
+        payment = checkcursor.fetchone()
+        checkcursor.close()
+
+        if payment:
+            # display existing payment method
+            return render_template('disppayment.html', payment = payment)
+
+        elif request.method == 'POST' and 'cardNumber' in request.form and 'cardholderName' in request.form and 'expirationDate' in request.form:
             cardNumber = request.form['cardNumber']
             cardholderName = request.form['cardholderName']
             expirationDate = request.form['expirationDate']
 
             cursor = cnx.cursor(buffered=True)
+            
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            cursor.execute("set session transaction isolation level read committed")
             query = "SELECT * FROM payment WHERE username = %s"
             cursor.execute(query, (username,))
             account = cursor.fetchone()
@@ -122,6 +163,10 @@ def paymentmethod():
             else:
                 # insert account payment method
                 insertcursor = cnx.cursor(buffered=True)
+                
+                # read committed b/c do not want other transactions to read uncommitted data
+                # repeatable read non necessary since only references one row
+                insertcursor.execute("set session transaction isolation level read committed")
                 query = "INSERT INTO payment VALUES (%s, %s, %s, %s)"
                 insertcursor.execute(
                     query, (cardNumber, username, cardholderName, expirationDate,))
@@ -154,11 +199,14 @@ def purchase():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
-                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
-                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                             <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
@@ -170,7 +218,7 @@ def purchase():
                                             <div class="msg">{{ msg }}</div>
                                             <h1>Cart Contents</h1></br>'''
             htmlmiddle = '''<h1>Payment Method</h1></br>'''
-            htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">
+            htmlepilogue = '''
                             </div>
                         </div>
                     </div>
@@ -178,45 +226,70 @@ def purchase():
             </html>'''
 
             # create html table for cart info
-            carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+            
             cartcursor = cnx.cursor(buffered=True)
+
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            cartcursor.execute("set session transaction isolation level read committed")
             cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
             cartcursor.execute(cartquery, (session['username'],))
 
-          #  cartSnippet = cartcursor.fetchone
-
+            carttable = ""
+            count = 0 
             for (item, price, quantity) in cartcursor:
+                if count == 0:
+                    carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+                    count = count + 1
+
                 carttable += "<tr><td>%s</td>" % item
                 carttable += "<td>%s</td>" % price
                 carttable += "<td>%s</td>" % quantity
                 carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
 
                 carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
-
+            
+            if count == 0:  # no items in cart
+                carttable = '''<p class="worddark">Please add items to the shopping cart before proceeding to checkout.</p></br></br>'''
+            else:
+                carttable += "</table></br>"
+                
             cartcursor.close()
-            carttable += "</table></br>"
+            
 
             # create html for payment info
             paymentcursor = cnx.cursor(buffered=True)
+            
+            # read committed b/c do not want to read data that has not been committed
+            # (i.e. if register() has inserted a new user but not yet committed)
+            # assuming only one instance per username so no need for repeatable read
+            paymentcursor.execute("set session transaction isolation level read committed")
             paymentquery = "SELECT * FROM payment WHERE username = %s"
             paymentcursor.execute(paymentquery, (session['username'],))
             payment = paymentcursor.fetchone()
             paymentcursor.close()
 
-            paymentinfo = '''<table>
-                                <tr>
-                                    <td class='worddark'>Card Number</td>
-                                    <td>%s</td>
-                                </tr>
-                                <tr>
-                                    <td class='worddark'>Name on Card</td>
-                                    <td>%s</td>
-                                </tr>
-                                <tr>
-                                    <td class='worddark'>Expiration Date</td>
-                                    <td>%s</td>
-                                </tr>
-                            </table></br>''' % (payment[0], payment[1], payment[2])
+            paymentinfo = ""
+            if payment:
+                paymentinfo = '''<table>
+                                    <tr>
+                                        <td class='worddark'>Card Number</td>
+                                        <td>%s</td>
+                                    </tr>
+                                    <tr>
+                                        <td class='worddark'>Name on Card</td>
+                                        <td>%s</td>
+                                    </tr>
+                                    <tr>
+                                        <td class='worddark'>Expiration Date</td>
+                                        <td>%s</td>
+                                    </tr>
+                                </table></br>''' % (payment[0], payment[1], payment[2])
+                htmlepilogue = '''<input type="submit" class="btn" name="purchase" value="Place Order">''' + htmlepilogue
+            else:
+                htmlepilogue = '''<p class="worddark">Please enter a payment method before proceeding to checkout.</p>''' + htmlepilogue
+
 
             # write html file
             f = open("templates/purchase.html", "w")
@@ -234,52 +307,36 @@ def purchase():
             print(request.form)
             if 'Remove' in request.form:
                 cursor = cnx.cursor(buffered=True)
-                print("REMOVE")
-                print("after username")
-                print(request.form)
-                name = request.form['item_name']
-                print(name)
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                # find quantity
-                find_quantity = "SELECT quantity FROM shopping_cart WHERE username = %s and item_id = %s"
-                cursor.execute(
-                    find_quantity, (session['username'], item_id[0],))
+                
+                # serializable b/c affects multiple rows through multiple queries
+                # and do not want other transactions accessing these rows until
+                # the delete or update is complete
+                cursor.execute("set session transaction isolation level serializable")
 
-                quantity = cursor.fetchone()
-                quantity = quantity[0]
-                if(quantity == 1):
-                    print("about to delete item")
-                    deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-                    cursor.execute(deleteItem, (item_id[0], username,))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
-                else:
-                    newQuantity = quantity - 1
-                    updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                    cursor.execute(
-                        updateQuantity, (newQuantity, item_id[0], username, ))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
+                name = request.form['item_name']
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
+
+                deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+                cursor.execute(deleteItem, (item_id, username,))
+                cursor.close()
+                cnx.commit()
+                showCart()
 
             if 'Change Quantity' in request.form:
                 cursor = cnx.cursor(buffered=True)
                 
+                # serializable b/c affects multiple rows through multiple queries
+                # and do not want other transactions accessing these rows until
+                # update is complete
+                cursor.execute("set session transaction isolation level serializable")
+                
                 name = request.form['item_name']
-                print(name)
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                print("CHANGE QUANTITY")
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
+                
                 getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
+                cursor.execute(getQuantity, (item_id, username,))
                 quantity = cursor.fetchone()
                 print(quantity[0])
                 print(request.form)
@@ -289,7 +346,7 @@ def purchase():
                     new_quantity = quantity[0]
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
-                    updateQuantity, (new_quantity, item_id[0], username, ))
+                    updateQuantity, (new_quantity, item_id, username, ))
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -312,6 +369,10 @@ def purchase():
 
 def clearCart():
     cursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c delete affects multiple rows and do not want to
+    # purchase the same cart multiple times accidentally
+    cursor.execute("set session transaction isolation level serializable")
     query = "DELETE FROM shopping_cart WHERE username = %s"
     cursor.execute(query, (session['username'],))
     cnx.commit()
@@ -329,10 +390,12 @@ def showCart():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                        <ul>
-                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+             <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
-                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
@@ -355,6 +418,10 @@ def showCart():
     # create html table for cart info
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c select affects multiple rows and do not want another
+    # transaction to insert into shopping cart until this action is done
+    cartcursor.execute("set session transaction isolation level serializable")
     cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
     cartcursor.execute(cartquery, (session['username'],))
 
@@ -371,6 +438,10 @@ def showCart():
     carttable += "</table></br>"
     # create html for payment info
     paymentcursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want to read data that has not been committed
+    # assuming only one instance per username so no need for repeatable read
+    paymentcursor.execute("set session transaction isolation level read committed")
     paymentquery = "SELECT * FROM payment WHERE username = %s"
     paymentcursor.execute(paymentquery, (session['username'],))
     payment = paymentcursor.fetchone()
@@ -404,6 +475,10 @@ def showCart():
 def createNewTransaction():
     # get next transaction ID number
     cursor = cnx.cursor(buffered=True)
+    
+    # serializable b/c do not want phantom data if another user tries to
+    # perform another transaction at the same time
+    cursor.execute("set session transaction isolation level serializable")
     query = "SELECT transaction_id FROM transaction ORDER BY transaction_id DESC"
     cursor.execute(query)
     latestTransaction = cursor.fetchone()
@@ -435,6 +510,10 @@ def createNewTransaction():
 
 def storePurchase(transactionID):
     cursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want other transactions to read uncommitted data
+    # repeatable read non necessary since only references one row
+    cursor.execute("set session transaction isolation level repeatable read")
 
     # get payment info
     paymentquery = "SELECT payment_id FROM payment WHERE username = %s"
@@ -451,6 +530,10 @@ def storePurchase(transactionID):
 def transferCart(transactionID):
     # get cart items
     cursor = cnx.cursor(buffered=True)
+    
+    # repeatable read b/c insert affects multiple rows but phantom data is
+    # not a concern since each transaction will have a different id number
+    cursor.execute("set session transaction isolation level repeatable read")
     cartquery = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
     cursor.execute(cartquery, (session['username'],))
 
@@ -468,6 +551,98 @@ def transferCart(transactionID):
 
     cursor.close()
 
+def showShop(isHighToLow, msg):
+    print("msg") 
+    print(msg)
+    cursor = cnx.cursor(buffered=True)
+    
+    # read committed b/c do not want to read uncommitted data and updates
+    # to items will not happen often (only admins can update price)
+    cursor.execute("set session transaction isolation level read committed")
+    getItems = ""
+    if(isHighToLow):
+        getItems = "SELECT item_id, name, price FROM item ORDER BY price DESC"
+    else:
+        getItems = "SELECT item_id, name, price FROM item ORDER BY price ASC"
+
+    htmlprologue = '''<html lang="en">
+    <head>
+        <title> payment </title>
+        <link rel="stylesheet" href="../static/style.css">
+    </head>
+    <body>
+        <div class="one">
+            <div class="sidebar">
+                <h1>Menu</h1> 
+                <ul>
+               <li class="active"><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+                </ul>
+            </div>
+            <div class="content" align="center">
+            <div class="header">
+                    <h1>Shop</h1>
+                </div></br></br>
+            <h1>{{msg}}</h1>
+            <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
+            <input type="submit" class "btn" value="Low to High" name="Low to High">
+                <input type="submit" class "btn" value="High to Low" name="High to Low">
+                </form>
+    '''
+    cursor.execute(getItems)
+    carttable = "<table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr>"
+    for (item_id, name, price) in cursor:
+        print(item_id)
+        print(name)
+        print(price)
+
+
+        carttable += '''<tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>%s</td>''' % name
+        carttable += "<td>%s</td>" % price
+    
+        #carttable += '''<td><label for="%s">%s</p> '''
+        carttable += '''          <input type="hidden" name="item_name" value="%s"></td>''' % name
+        carttable += '''
+                    <td>
+                        <select name="quantity"> 
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        </select>
+                        
+                        <input type="submit" class="btn" value="Add">
+                        </td></tr></form>
+            
+                ''' 
+
+    cursor.close()
+    carttable += "</table></br>"
+
+    htmlepilogue = '''</div>
+        
+    </div>
+</body>
+</html>'''
+    f = open("templates/shop.html", "w")
+    f.write(htmlprologue)
+    f.write(carttable)
+    f.write(htmlepilogue)
+    f.close()
+
+
 # registers a new user and inserts data into database
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -477,6 +652,8 @@ def register():
         budget = request.form['monthlybudget']
 
         cursor = cnx.cursor(buffered=True)
+        
+        cursor.execute("set session transaction isolation level read committed")
         query = "SELECT * FROM user WHERE username = %s"
         cursor.execute(query, (username,))
         account = cursor.fetchone()
@@ -485,6 +662,7 @@ def register():
             msg = 'Username already exists.'
         else:
             insertcursor = cnx.cursor(buffered=True)
+            insertcursor.execute("set session transaction isolation level repeatable read")
             query = "INSERT INTO user VALUES (%s, %s)"
             insertcursor.execute(query, (username, budget,))
             cnx.commit()
@@ -499,187 +677,91 @@ def register():
 
 @app.route('/shop', methods=['GET', 'POST'])
 def shop():
+    msg = ''
     print("in shop")
     if request.method == 'GET':
-        cursor = cnx.cursor(buffered=True)
-
-        getItems = "SELECT item_id, name, price FROM item"
-
-        htmlprologue = '''<html lang="en">
-        <head>
-            <title> payment </title>
-            <link rel="stylesheet" href="../static/style.css">
-        </head>
-        <body>
-            <div class="one">
-                <div class="sidebar">
-                    <h1>Menu</h1> 
-                    <ul>
-                        <li><a href="{{url_for('shop')}}">Shop</a></li>
-                        <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                        <li><a href="{{url_for('budget')}}">Budget</a></li>
-                        <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                        <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                        <li><a href="{{url_for('logout')}}">Logout</a></li>
-                    </ul>
-                </div>
-                <div class="content" align="center">
-        '''
-        cursor.execute(getItems)
-        carttable = "<table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr>"
-        for (item_id, name, price) in cursor:
-            print(item_id)
-            print(name)
-            print(price)
-
-
-            carttable += '''<tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>%s</td>''' % name
-            carttable += "<td>%s</td>" % price
-        
-            #carttable += '''<td><label for="%s">%s</p> '''
-            carttable += '''          <input type="hidden" name="item_name" value="%s"></td>''' % name
-            carttable += '''
-                        <td>
-                            <select name="quantity"> 
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            </select>
-                           
-                            <input type="submit" class="btn" value="Add" name="Add">
-                         </td></tr></form>
-                
-                    ''' 
-
-        cursor.close()
-        carttable += "</table></br>"
-
-        htmlepilogue = '''</div>
-            
-        </div>
-    </body>
-</html>'''
-        f = open("templates/shop.html", "w")
-        f.write(htmlprologue)
-        f.write(carttable)
-        f.write(htmlepilogue)
-        f.close()
-
+       showShop(0, msg)
+       print(request.form)
     if request.method == 'POST':
-        print("post:")
-        cursor = cnx.cursor(buffered=True)
-        print("after cursor")
-        username = session['username']
-        print("after requesting username")
+        print("POST")
+        if "High to Low" in request.form:
+            #high to low
+            print("HIGH")
+            showShop(1, msg)
+        if "Low to High" in request.form:
+            print("LOW")
 
-        name = request.form['item_name']
-        print("after requesting item_name")
+            showShop(0, msg)
+        if "Add" in request.form:
+            print("post:")
+            cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
+            print("after cursor")
+            username = session['username']
+            print("after requesting username")
 
-        quantity = request.form['quantity']
-        print("after requesting quantity")
+            name = request.form['item_name']
+            print("after requesting item_name")
 
-        print("after requesting form elements")
-        findPrice = "SELECT price FROM item WHERE name = %s"
-        cursor.execute(findPrice, (name,))
-        print("after first query execution")
+            quantity = request.form['quantity']
+            print("after requesting quantity")
 
-        price = cursor.fetchone()
-        print("name:")
-        print(name)
-        print(quantity)
-        print(findPrice)
-        print("Adding item to cart")
-        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
-        cursor.execute(findItemId, (name,))
-        item_id = cursor.fetchone()
-        print("item_id:")
-        print(item_id[0])
-       # print(username)
-        findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
-        cursor.execute(findItem, (username, item_id[0]))
-        it = cursor.fetchone()
-        print("it: ")
-        print(it)
+            print("after requesting form elements")
+            findPrice = "SELECT price FROM item WHERE name = %s"
+            cursor.execute(findPrice, (name,))
+            print("after first query execution")
 
-        if(it is None):
-            print("item isnt in shopping cart")
-            addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
-            cursor.execute(addToShoppingCart,
-                           (item_id[0], username, quantity,))
-        else:
-            print("item is in shopping cart")
+            price = cursor.fetchone()
+            print("name:")
+            print(name)
+            print(quantity)
+            print(findPrice)
+            print("Adding item to cart")
+            findItemId = "SELECT item_id FROM item WHERE item.name = %s"
+            cursor.execute(findItemId, (name,))
+            item_id = cursor.fetchone()
+            print("item_id:")
+            print(item_id[0])
+        # print(username)
+            findItem = "SELECT item_id FROM shopping_cart where username= %s AND item_id = %s"
+            cursor.execute(findItem, (username, item_id[0]))
+            it = cursor.fetchone()
+            print("it: ")
+            print(it)
+            msg = 'Added item'
+            if(it is None):
+                print("item isnt in shopping cart")
+                addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
+                cursor.execute(addToShoppingCart,
+                            (item_id[0], username, quantity,))
+                
+            else:
+                print("item is in shopping cart")
 
-            item = cursor.fetchone()
-            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-            cursor.execute(getQuantity, (item_id[0], username,))
-            quantity = cursor.fetchone()
-            print(quantity[0])
-            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-            cursor.execute(
-                updateQuantity, (quantity[0]+1, item_id[0], username, ))
-        cnx.commit()
-        cursor.close()
+                item = cursor.fetchone()
+                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
+                cursor.execute(getQuantity, (item_id[0], username,))
+                quantity = cursor.fetchone()
+                print(quantity[0])
+                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
+                cursor.execute(
+                    updateQuantity, (quantity[0]+1, item_id[0], username, ))
+            print("msg")
+            
+            print(msg)
+            cnx.commit()
+            cursor.close()
        # addToShoppingCart = "INSERT INTO shopping_cart VALUES(%s,%s,%s)"
         #cursor.execute(addToShoppingCart, (item_id[0], username, quantity,))
         #cursor = cnx.cursor(buffered = True)
-    return render_template('shop.html')
-
-
-@app.route('/shopping_cart', methods=['GET', 'POST'])
-def shopping_cart():
-    print("IN SHOPPING CART WOHOO")
-    hello = "<h1> WHASSUPPPPPP </h1>"
-    f = open("shopping_cart.html", "w")
-    f.write(hello)
-
-    username = session['username']
-    if request.method == 'POST':
-        cursor = cnx.cursor(buffered=True)
-        findItemId = "SELECT item_id FROM item WHERE item.name = %s"
-        cursor.execute(findItemId, (name,))
-        item_id = cursor.fetchone()
-        # print(request.form.get("Remove"))
-        if 'Remove' in request.form:
-            print("REMOVE")
-            print("after username")
-            print(request.form)
-            name = request.form['item_name']
-            print("item_id:")
-            print(item_id[0])
-
-          #  deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-           # cursor.execute(deleteItem, (item_id[0], username,))
-        elif 'Change Quantity' in request.form:
-            print("CHANGE QUANTITY")
-            getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-            cursor.execute(getQuantity, (item_id[0], username,))
-            quantity = cursor.fetchone()
-            print(quantity[0])
-            updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-            cursor.execute(
-                updateQuantity, (quantity[0]+1, item_id[0], username, ))
-
-        cursor = cnx.cursor(buffered=True)
-        findBudget = "SELECT monthly_budget FROM user WHERE username= %s"
-        cursor.execute(findBudget, (username,))
-        budget = cursor.fetchone()
-        print(budget[0])
-        findItemsIds = "SELECT item_id FROM shopping_cart WHERE username= %s"
-        itemsIds = cursor.fetchall()
-    return render_template('shopping_cart.html')
+    return render_template('shop.html', msg=msg)
 
 
 def cart_total():
     # find all items
     total = 0
     cursor = cnx.cursor(buffered=True)
+    cursor.execute("set session transaction isolation level read committed")
     find_id_and_quantity = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
     cursor.execute(find_id_and_quantity, (session['username'],))
 
@@ -690,18 +772,21 @@ def cart_total():
         price = cursor.fetchone()[0]
         total += price * quantity
     print(total)
+    cursor.close()
     return total
 
 
 def compute_remaining_budget(cart_total):
     # find budget
     cursor = cnx.cursor(buffered=True)
+    cursor.execute("set session transaction isolation level read committed")
     find_budget = "SELECT monthly_budget FROM user WHERE username = %s"
     cursor.execute(find_budget, (session['username'],))
     budget = cursor.fetchone()[0]
     print(budget)
     remaining_budget = budget - cart_total
     print(remaining_budget)
+    cursor.close()
     return remaining_budget
 
 
@@ -720,6 +805,7 @@ def budget():
             print(username)
             print(budget)
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
             cursor.execute(changeBudget, (budget, username,))
             cnx.commit()
@@ -729,6 +815,7 @@ def budget():
             print(username)
             # 1. Get budget
             cursor = cnx.cursor(buffered=True)
+            cursor.execute("set session transaction isolation level serializable")
             getBudget = "SELECT monthly_budget FROM user WHERE username = %s"
             cursor.execute(getBudget, (username,))
             budget = cursor.fetchone()
@@ -754,14 +841,20 @@ def transaction_history():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
-                                            <li><a href="{{url_for('shop')}}">Shop</a></li>
-                                            <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                                            <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                                            <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                                           <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li class="active"><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
+                                        <div class="header">
+                                            <h1>Transaction History</h1>
+                                        </div></br></br>
                                        '''
     htmlepilogue = '''
                         </div>
@@ -769,21 +862,46 @@ def transaction_history():
                 </body>
             </html>'''
 
-    carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
-
     cartcursor = cnx.cursor(buffered=True)
-    cartquery = "SELECT username, transaction_id, payment_id, date FROM purchase WHERE username = %s"
+    cartcursor.execute("set session transaction isolation level read committed")
+    cartquery = '''SELECT p.transaction_id, p.date, i.name, it.quantity, t.total
+                   FROM purchase p JOIN transaction t on p.transaction_id = t.transaction_id
+                                   JOIN item_transaction it on t.transaction_id = it.transaction_id
+                                   JOIN item i on it.item_id = i.item_id
+                   WHERE username = %s
+                   ORDER BY p.transaction_id'''
     cartcursor.execute(cartquery, (session['username'],))
 
-    #  cartSnippet = cartcursor.fetchone
+    count = 0;
+    prev_transaction_id = -1
+    curr_transaction_id = -1
+    carttable = ""
 
-    for (username, transaction_id, payment_id, date) in cartcursor:
-        carttable += "<tr><td>%s</td>" % username
-        carttable += "<td>%s</td>" % transaction_id
-        carttable += "<td>%s</td>" % payment_id
-        carttable += "<td>%s</td>" % date
+    for (transaction_id, date, name, quantity, total) in cartcursor:
+        prev_transaction_id = curr_transaction_id
+        curr_transaction_id = transaction_id
+        if count == 0:
+            carttable = '''<table style="width:70%" align:"right"><tr class='worddark'><td>Transaction ID</td><td>Transaction Date</td><td>Item Name</td><td>Item Quantity</td><td>Transaction Total</td></tr>'''
+            count = count + 1
+
+        if prev_transaction_id == curr_transaction_id:
+            carttable += "<tr><td></td>"
+            carttable += "<td></td>"
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
+        else: 
+            carttable += "<tr><td>%s</td>" % transaction_id
+            carttable += "<td>%s</td>" % date
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
     cartcursor.close()
-    carttable += "</tr></table></br>"
+
+    if count == 0:  # no previous transactions
+        carttable = '''<p class="worddark">No previous transactions to display.</p>'''
+    else:
+        carttable += "</tr></table></br>"
     f = open("templates/transaction_history.html", "w")
     f.write(htmlprologue)
     f.write(carttable)
@@ -804,13 +922,15 @@ def admin():
                                     <div class="one">
                                         <div class="sidebar">
                                             <h1>Menu</h1>
-                                        <ul>
-                        <li><a href="{{url_for('shop')}}">Shop</a></li>
-                    <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                    <li><a href="{{url_for('budget')}}">Budget</a></li>
-                    <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                    <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                    <li><a href="{{url_for('logout')}}">Logout</a></li>
+                    <ul>
+                     <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
                     </ul>
                                         </div>
                                         <div class="content" align="center">
@@ -831,16 +951,17 @@ def admin():
         # create html table for cart info
         carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
         cartcursor = cnx.cursor(buffered=True)
-        cartquery = "SELECT name, price FROM item "
-        cartcursor.execute(cartquery)
+        cartcursor.execute("set session transaction isolation level read committed")
 
-        #  cartSnippet = cartcursor.fetchone
+        cartcursor.callproc('getItem')
+        for result in cartcursor.stored_results():
+            list = result.fetchall()
 
-        for (item, price) in cartcursor:
-            carttable += "<tr><td>%s</td>" % item
-            carttable += "<td>%s</td>" % price
-            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+            for (item, price) in list:
+                carttable += "<tr><td>%s</td>" % item
+                carttable += "<td>%s</td>" % price
+                carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+                carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
         cartcursor.close()
         carttable += "</table></br>"
@@ -854,17 +975,15 @@ def admin():
         username = session['username']
         if "Change Price" in request.form:
             cursor = cnx.cursor(buffered=True)
-            print("change price :)")
+            cursor.execute("set session transaction isolation level serializable")
+
             name = request.form['item_name']
-            findItemId = "SELECT item_id FROM item WHERE name = %s"
-            cursor.execute(findItemId, (name,))
-            item_id = cursor.fetchone()
-            print("item_id:")
-            print(item_id[0])
+            item = cursor.callproc('getItemFromName', [name, 0])
+            item_id = item[1]
             new_price = request.form['new_price']
-            # print(price)
+
             updatePrice = "UPDATE item SET price=%s WHERE item_id = %s "
-            cursor.execute(updatePrice, (new_price, item_id[0], ))
+            cursor.execute(updatePrice, (new_price, item_id, ))
             cursor.close()
             cnx.commit()
             showAdmin()
@@ -882,10 +1001,12 @@ def showAdmin():
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                     <ul>
-                    <li><a href="{{url_for('shop')}}">Shop</a></li>
+                  <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
                 <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li class="active"><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
                 </ul>
@@ -908,16 +1029,17 @@ def showAdmin():
     # create html table for cart info
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
-    cartquery = "SELECT name, price FROM item "
-    cartcursor.execute(cartquery)
+    cartcursor.execute("set session transaction isolation level read committed")
 
-    #  cartSnippet = cartcursor.fetchone
+    cartcursor.callproc('getItem')
+    for result in cartcursor.stored_results():
+        list = result.fetchall()
 
-    for (item, price) in cartcursor:
-        carttable += "<tr><td>%s</td>" % item
-        carttable += "<td>%s</td>" % price
-        carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-        carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+        for (item, price) in list:
+            carttable += "<tr><td>%s</td>" % item
+            carttable += "<td>%s</td>" % price
+            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
     cartcursor.close()
     carttable += "</table></br>"

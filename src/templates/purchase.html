@@ -8,11 +8,22 @@
                                     <div class="sidebar">
                                         <h1>Menu</h1>
                                         <ul>
+<<<<<<< HEAD
                                             <li><a href="{{url_for('shop')}}">Shop</a></li>
                                             <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                                             <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
                                             <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                                             <li><a href="{{url_for('logout')}}">Logout</a></li>
+=======
+                                             <li><a href="{{url_for('shop')}}">Shop</a></li>
+                <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
+                <li><a href="{{url_for('budget')}}">Budget</a></li>
+                <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
+                <li><a href="{{url_for('admin')}}">Admin</a></li>
+                <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
+                <li><a href="{{url_for('delete')}}">Delete Account</a></li>
+                <li><a href="{{url_for('logout')}}">Logout</a></li>
+>>>>>>> 999b9c658e10d8888fca3b5ecf64f9a671d3952f
                                         </ul> 
                                     </div>
                                     <div class="content" align="center">
@@ -22,7 +33,11 @@
                                         <div class="contentbar">
                                             <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
                                             <div class="msg">{{ msg }}</div>
+<<<<<<< HEAD
                                             <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr><tr><td>banana</td><td>0.70</td><td>1</td><td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="banana"><input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr><tr><td>Apple</td><td>1.00</td><td>2</td><td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Apple"><input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr><tr><td>Tomato</td><td>0.30</td><td>3</td><td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr></table></br><h1>Payment Method</h1></br><table>
+=======
+                                            <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr><tr><td>Tomato</td><td>0.30</td><td>2</td><td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr></table></br><h1>Payment Method</h1></br><table>
+>>>>>>> 999b9c658e10d8888fca3b5ecf64f9a671d3952f
                                 <tr>
                                     <td class='worddark'>Card Number</td>
                                     <td>1234</td>

@@ -20,15 +20,24 @@
             </div>
             <div class="content" align="center">
                 <div class="header">
-                    <h1>Enter Payment Method</h1>
+                    <h1>Review Payment Method</h1>
                 </div></br></br>
-                <div class="paymentbottom">
-                    <form action="{{ url_for('paymentmethod')}}" method="post" autocomplete="off">
-                    <div class="msg">{{ msg }}</div>
-                    <input type="text" name="cardNumber" placeholder="Enter Your Card Number" class="textbox" id="cardNumber" required></br></br>
-                    <input type="text" name="cardholderName" placeholder="Enter the Name on the Card" class="textbox" id="cardholderName" required></br></br>
-                    <input type="text" name="expirationDate" placeholder="Enter the Expiration Date" class="textbox" id="expirationDate" required></br></br>
-                    <input type="submit" class="btn" value="Add Payment Method">
+                <div class="contentbar">
+                    <h1>Payment Method</h1></br>
+                    <table>
+                        <tr>
+                            <td class='worddark'>Card Number</td>
+                            <td>{{ payment[0] }}</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Name on Card</td>
+                            <td>{{ payment[1] }}</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Expiration Date</td>
+                            <td>{{ payment[2] }}</td>
+                        </tr>
+                    </table></br>
                 </div>
             </div>
         </div>
