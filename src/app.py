@@ -746,13 +746,14 @@ def shop():
                 print("item is in shopping cart")
 
                 item = cursor.fetchone()
-                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
-                quantity = cursor.fetchone()
-                print(quantity[0])
+                quantityItem = cursor.callproc('getQuantityFromCart', [username, item_id[0], 0])
+                print(quantityItem)
+                quantity = quantityItem[2]
+
+                print(quantity)
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
-                    updateQuantity, (quantity[0]+1, item_id[0], username, ))
+                    updateQuantity, (quantity+1, item_id[0], username, ))
             print("msg")
             
             print(msg)
