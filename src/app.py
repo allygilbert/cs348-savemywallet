@@ -890,24 +890,41 @@ def transaction_history():
 
     cartcursor = cnx.cursor(buffered=True)
     cartcursor.execute("set session transaction isolation level read committed")
-    cartquery = "SELECT username, transaction_id, payment_id, date FROM purchase WHERE username = %s"
+    cartquery = '''SELECT p.transaction_id, p.date, i.name, it.quantity, t.total
+                   FROM purchase p JOIN transaction t on p.transaction_id = t.transaction_id
+                                   JOIN item_transaction it on t.transaction_id = it.transaction_id
+                                   JOIN item i on it.item_id = i.item_id
+                   WHERE username = %s
+                   ORDER BY p.transaction_id'''
     cartcursor.execute(cartquery, (session['username'],))
 
     count = 0;
+    prev_transaction_id = -1
+    curr_transaction_id = -1
     carttable = ""
 
-    for (username, transaction_id, payment_id, date) in cartcursor:
+    for (transaction_id, date, name, quantity, total) in cartcursor:
+        prev_transaction_id = curr_transaction_id
+        curr_transaction_id = transaction_id
         if count == 0:
-            carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
+            carttable = '''<table style="width:70%" align:"right"><tr class='worddark'><td>Transaction ID</td><td>Transaction Date</td><td>Item Name</td><td>Item Quantity</td><td>Transaction Total</td></tr>'''
             count = count + 1
 
-        carttable += "<tr><td>%s</td>" % username
-        carttable += "<td>%s</td>" % transaction_id
-        carttable += "<td>%s</td>" % payment_id
-        carttable += "<td>%s</td>" % date
+        if prev_transaction_id == curr_transaction_id:
+            carttable += "<tr><td></td>"
+            carttable += "<td></td>"
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
+        else: 
+            carttable += "<tr><td>%s</td>" % transaction_id
+            carttable += "<td>%s</td>" % date
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
     cartcursor.close()
 
-    if count == 0:  # not previous transactions
+    if count == 0:  # no previous transactions
         carttable = '''<p class="worddark">No previous transactions to display.</p>'''
     else:
         carttable += "</tr></table></br>"
