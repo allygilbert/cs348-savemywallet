@@ -780,10 +780,10 @@ def compute_remaining_budget(cart_total):
     # find budget
     cursor = cnx.cursor(buffered=True)
     cursor.execute("set session transaction isolation level read committed")
-    find_budget = "SELECT monthly_budget FROM user WHERE username = %s"
-    cursor.execute(find_budget, (session['username'],))
-    budget = cursor.fetchone()[0]
-    print(budget)
+
+    item = cursor.callproc('getBudgetFromUsername', [session['username'], 0])
+    budget = item[1]
+
     remaining_budget = budget - cart_total
     print(remaining_budget)
     cursor.close()
@@ -816,11 +816,9 @@ def budget():
             # 1. Get budget
             cursor = cnx.cursor(buffered=True)
             cursor.execute("set session transaction isolation level serializable")
-            getBudget = "SELECT monthly_budget FROM user WHERE username = %s"
-            cursor.execute(getBudget, (username,))
-            budget = cursor.fetchone()
-            budget = budget[0]
-            print(budget)
+
+            item = cursor.callproc('getBudgetFromUsername', [session['username'], 0])
+            budget = item[1]
             add_to_budget = request.form['add_to_budget_i']
 
             changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
