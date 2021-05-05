@@ -1,86 +1,4 @@
 <html lang="en">
-<<<<<<< HEAD
-        <head>
-            <title> payment </title>
-            <link rel="stylesheet" href="../static/style.css">
-        </head>
-        <body>
-            <div class="one">
-                <div class="sidebar">
-                    <h1>Menu</h1> 
-                    <ul>
-                        <li><a href="{{url_for('shop')}}">Shop</a></li>
-                        <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
-                        <li><a href="{{url_for('budget')}}">Budget</a></li>
-                        <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
-                        <li><a href="{{url_for('delete')}}">Delete Account</a></li>
-                        <li><a href="{{url_for('logout')}}">Logout</a></li>
-                    </ul>
-                </div>
-                <div class="content" align="center">
-<<<<<<< HEAD
-        <table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr><tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>banana</td><td>0.70</td>          <input type="hidden" name="item_name" value="banana"></td>
-=======
-                    <div class="header">
-                        <h1>Shop</h1>
-                    </div></br></br>
-        <table><tr class='worddark'><td>item</td><td>price</td><td>quantity<td></tr><tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>banana</td><td>1.00</td>          <input type="hidden" name="item_name" value="banana"></td>
->>>>>>> 999b9c658e10d8888fca3b5ecf64f9a671d3952f
-                        <td>
-                            <select name="quantity"> 
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            </select>
-                           
-                            <input type="submit" class="btn" value="Add" name="Add">
-                         </td></tr></form>
-                
-                    <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Apple</td><td>1.00</td>          <input type="hidden" name="item_name" value="Apple"></td>
-                        <td>
-                            <select name="quantity"> 
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            </select>
-                           
-                            <input type="submit" class="btn" value="Add" name="Add">
-                         </td></tr></form>
-                
-                    <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Tomato</td><td>0.30</td>          <input type="hidden" name="item_name" value="Tomato"></td>
-                        <td>
-                            <select name="quantity"> 
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                            </select>
-                           
-                            <input type="submit" class="btn" value="Add" name="Add">
-                         </td></tr></form>
-                
-                    </table></br></div>
-=======
     <head>
         <title> payment </title>
         <link rel="stylesheet" href="../static/style.css">
@@ -101,6 +19,9 @@
                 </ul>
             </div>
             <div class="content" align="center">
+            <div class="header">
+                    <h1>Shop</h1>
+                </div></br></br>
             <h1>{{msg}}</h1>
             <form action="{{ url_for('shop')}}" method="post" autocomplete="off">
             <input type="submit" class "btn" value="Low to High" name="Low to High">
@@ -121,11 +42,10 @@
                         <option value="10">10</option>
                         </select>
                         
-                        <input type="submit" class="btn" value="Add">
+                        <input type="submit" class="btn" value="Add" name="Add">
                         </td></tr></form>
->>>>>>> 44c21162bfafb1f10bc49c3e3844eace23df19bf
             
-                <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Apple</td><td>0.53</td>          <input type="hidden" name="item_name" value="Apple"></td>
+                <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>banana</td><td>0.70</td>          <input type="hidden" name="item_name" value="banana"></td>
                     <td>
                         <select name="quantity"> 
                         <option value="1">1</option>
@@ -140,10 +60,10 @@
                         <option value="10">10</option>
                         </select>
                         
-                        <input type="submit" class="btn" value="Add">
+                        <input type="submit" class="btn" value="Add" name="Add">
                         </td></tr></form>
             
-                <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>banana</td><td>1.00</td>          <input type="hidden" name="item_name" value="banana"></td>
+                <tr> <form action="{{ url_for('shop')}}" method="post" autocomplete="off"><td>Apple</td><td>1.00</td>          <input type="hidden" name="item_name" value="Apple"></td>
                     <td>
                         <select name="quantity"> 
                         <option value="1">1</option>
@@ -158,7 +78,7 @@
                         <option value="10">10</option>
                         </select>
                         
-                        <input type="submit" class="btn" value="Add">
+                        <input type="submit" class="btn" value="Add" name="Add">
                         </td></tr></form>
             
                 </table></br></div>
