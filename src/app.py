@@ -237,23 +237,25 @@ def purchase():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             cartcursor.execute("set session transaction isolation level read committed")
-            cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
-            cartcursor.execute(cartquery, (session['username'],))
-
+            cartcursor.callproc('getCartFromUsername', [session['username']])
             carttable = ""
             count = 0 
-            for (item, price, quantity) in cartcursor:
-                if count == 0:
-                    carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
-                    count = count + 1
 
-                carttable += "<tr><td>%s</td>" % item
-                carttable += "<td>%s</td>" % price
-                carttable += "<td>%s</td>" % quantity
-                carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-
-                carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+            for result in cartcursor.stored_results():
+                list = result.fetchall()
             
+                for (item, price, quantity) in list:
+                    if count == 0:
+                        carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+                        count = count + 1
+
+                    carttable += "<tr><td>%s</td>" % item
+                    carttable += "<td>%s</td>" % price
+                    carttable += "<td>%s</td>" % quantity
+                    carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+
+                    carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+                
             if count == 0:  # no items in cart
                 carttable = '''<p class="worddark">Please add items to the shopping cart before proceeding to checkout.</p></br></br>'''
             else:
@@ -427,17 +429,19 @@ def showCart():
     # serializable b/c select affects multiple rows and do not want another
     # transaction to insert into shopping cart until this action is done
     cartcursor.execute("set session transaction isolation level serializable")
-    cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
-    cartcursor.execute(cartquery, (session['username'],))
+    cartcursor.callproc('getCartFromUsername', [session['username']])
+    carttable = ""
+    count = 0 
 
-    #  cartSnippet = cartcursor.fetchone
+    for result in cartcursor.stored_results():
+        list = result.fetchall()
 
-    for (item, price, quantity) in cartcursor:
-        carttable += "<tr><td>%s</td>" % item
-        carttable += "<td>%s</td>" % price
-        carttable += "<td>%s</td>" % quantity
-        carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-        carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+        for (item, price, quantity) in list:
+            carttable += "<tr><td>%s</td>" % item
+            carttable += "<td>%s</td>" % price
+            carttable += "<td>%s</td>" % quantity
+            carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+            carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
 
     cartcursor.close()
     carttable += "</table></br>"
