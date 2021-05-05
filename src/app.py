@@ -83,7 +83,7 @@ def delete():
                         # repeatable read because user could be trying to delete account
                         # as another user is trying to register with same username
                         # only affects one row since username is key so no need for serializable
-                        deletecursor.execute("set session transaction isolation level repeatable read")
+                        deletecursor.execute("set session transaction isolation level serializable")
                         query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
                         deletecursor.execute(query, (username, budget,))
                         cnx.commit()
@@ -662,7 +662,7 @@ def register():
             msg = 'Username already exists.'
         else:
             insertcursor = cnx.cursor(buffered=True)
-            insertcursor.execute("set session transaction isolation level repeatable read")
+            insertcursor.execute("set session transaction isolation level serializable")
             query = "INSERT INTO user VALUES (%s, %s)"
             insertcursor.execute(query, (username, budget,))
             cnx.commit()
