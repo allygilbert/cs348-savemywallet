@@ -312,38 +312,16 @@ def purchase():
                 # and do not want other transactions accessing these rows until
                 # the delete or update is complete
                 cursor.execute("set session transaction isolation level serializable")
-                print("REMOVE")
-                print("after username")
-                print(request.form)
-                name = request.form['item_name']
-                print(name)
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                # find quantity
-                find_quantity = "SELECT quantity FROM shopping_cart WHERE username = %s and item_id = %s"
-                cursor.execute(
-                    find_quantity, (session['username'], item_id[0],))
 
-                quantity = cursor.fetchone()
-                quantity = quantity[0]
-                if(quantity == 1):
-                    print("about to delete item")
-                    deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
-                    cursor.execute(deleteItem, (item_id[0], username,))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
-                else:
-                    newQuantity = quantity - 1
-                    updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                    cursor.execute(
-                        updateQuantity, (newQuantity, item_id[0], username, ))
-                    cursor.close()
-                    cnx.commit()
-                    showCart()
+                name = request.form['item_name']
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
+
+                deleteItem = 'DELETE FROM shopping_cart WHERE item_id = %s AND username=%s'
+                cursor.execute(deleteItem, (item_id, username,))
+                cursor.close()
+                cnx.commit()
+                showCart()
 
             if 'Change Quantity' in request.form:
                 cursor = cnx.cursor(buffered=True)
@@ -354,15 +332,11 @@ def purchase():
                 cursor.execute("set session transaction isolation level serializable")
                 
                 name = request.form['item_name']
-                print(name)
-                findItemId = "SELECT item_id FROM item WHERE name = %s"
-                cursor.execute(findItemId, (name,))
-                item_id = cursor.fetchone()
-                print("item_id:")
-                print(item_id[0])
-                print("CHANGE QUANTITY")
+                item = cursor.callproc('getItemFromName', [name, 0])
+                item_id = item[1]
+                
                 getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
+                cursor.execute(getQuantity, (item_id, username,))
                 quantity = cursor.fetchone()
                 print(quantity[0])
                 print(request.form)
@@ -372,7 +346,7 @@ def purchase():
                     new_quantity = quantity[0]
                 updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
                 cursor.execute(
-                    updateQuantity, (new_quantity, item_id[0], username, ))
+                    updateQuantity, (new_quantity, item_id, username, ))
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -890,24 +864,41 @@ def transaction_history():
 
     cartcursor = cnx.cursor(buffered=True)
     cartcursor.execute("set session transaction isolation level read committed")
-    cartquery = "SELECT username, transaction_id, payment_id, date FROM purchase WHERE username = %s"
+    cartquery = '''SELECT p.transaction_id, p.date, i.name, it.quantity, t.total
+                   FROM purchase p JOIN transaction t on p.transaction_id = t.transaction_id
+                                   JOIN item_transaction it on t.transaction_id = it.transaction_id
+                                   JOIN item i on it.item_id = i.item_id
+                   WHERE username = %s
+                   ORDER BY p.transaction_id'''
     cartcursor.execute(cartquery, (session['username'],))
 
     count = 0;
+    prev_transaction_id = -1
+    curr_transaction_id = -1
     carttable = ""
 
-    for (username, transaction_id, payment_id, date) in cartcursor:
+    for (transaction_id, date, name, quantity, total) in cartcursor:
+        prev_transaction_id = curr_transaction_id
+        curr_transaction_id = transaction_id
         if count == 0:
-            carttable = "<table><tr class='worddark'><td>username</td><td>trans_id</td><td>pay_id</td><td>date</td></tr>"
+            carttable = '''<table style="width:70%" align:"right"><tr class='worddark'><td>Transaction ID</td><td>Transaction Date</td><td>Item Name</td><td>Item Quantity</td><td>Transaction Total</td></tr>'''
             count = count + 1
 
-        carttable += "<tr><td>%s</td>" % username
-        carttable += "<td>%s</td>" % transaction_id
-        carttable += "<td>%s</td>" % payment_id
-        carttable += "<td>%s</td>" % date
+        if prev_transaction_id == curr_transaction_id:
+            carttable += "<tr><td></td>"
+            carttable += "<td></td>"
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
+        else: 
+            carttable += "<tr><td>%s</td>" % transaction_id
+            carttable += "<td>%s</td>" % date
+            carttable += "<td>%s</td>" % name
+            carttable += "<td>%s</td>" % quantity
+            carttable += "<td>%s</td></tr>" % total
     cartcursor.close()
 
-    if count == 0:  # not previous transactions
+    if count == 0:  # no previous transactions
         carttable = '''<p class="worddark">No previous transactions to display.</p>'''
     else:
         carttable += "</tr></table></br>"
@@ -961,16 +952,16 @@ def admin():
         carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
         cartcursor = cnx.cursor(buffered=True)
         cartcursor.execute("set session transaction isolation level read committed")
-        cartquery = "SELECT name, price FROM item "
-        cartcursor.execute(cartquery)
 
-        #  cartSnippet = cartcursor.fetchone
+        cartcursor.callproc('getItem')
+        for result in cartcursor.stored_results():
+            list = result.fetchall()
 
-        for (item, price) in cartcursor:
-            carttable += "<tr><td>%s</td>" % item
-            carttable += "<td>%s</td>" % price
-            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+            for (item, price) in list:
+                carttable += "<tr><td>%s</td>" % item
+                carttable += "<td>%s</td>" % price
+                carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+                carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
         cartcursor.close()
         carttable += "</table></br>"
@@ -985,17 +976,14 @@ def admin():
         if "Change Price" in request.form:
             cursor = cnx.cursor(buffered=True)
             cursor.execute("set session transaction isolation level serializable")
-            print("change price :)")
+
             name = request.form['item_name']
-            findItemId = "SELECT item_id FROM item WHERE name = %s"
-            cursor.execute(findItemId, (name,))
-            item_id = cursor.fetchone()
-            print("item_id:")
-            print(item_id[0])
+            item = cursor.callproc('getItemFromName', [name, 0])
+            item_id = item[1]
             new_price = request.form['new_price']
-            # print(price)
+
             updatePrice = "UPDATE item SET price=%s WHERE item_id = %s "
-            cursor.execute(updatePrice, (new_price, item_id[0], ))
+            cursor.execute(updatePrice, (new_price, item_id, ))
             cursor.close()
             cnx.commit()
             showAdmin()
@@ -1042,16 +1030,16 @@ def showAdmin():
     carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr>"
     cartcursor = cnx.cursor(buffered=True)
     cartcursor.execute("set session transaction isolation level read committed")
-    cartquery = "SELECT name, price FROM item "
-    cartcursor.execute(cartquery)
 
-    #  cartSnippet = cartcursor.fetchone
+    cartcursor.callproc('getItem')
+    for result in cartcursor.stored_results():
+        list = result.fetchall()
 
-    for (item, price) in cartcursor:
-        carttable += "<tr><td>%s</td>" % item
-        carttable += "<td>%s</td>" % price
-        carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-        carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
+        for (item, price) in list:
+            carttable += "<tr><td>%s</td>" % item
+            carttable += "<td>%s</td>" % price
+            carttable += '''<td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+            carttable += '''<input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr>'''
 
     cartcursor.close()
     carttable += "</table></br>"
