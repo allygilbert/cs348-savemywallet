@@ -553,7 +553,7 @@ def shop():
                             <option value="10">10</option>
                             </select>
                            
-                            <input type="submit" class="btn" value="Add">
+                            <input type="submit" class="btn" value="Add" name="Add">
                          </td></tr></form>
                 
                     ''' 
