@@ -83,7 +83,7 @@ def delete():
                         # repeatable read because user could be trying to delete account
                         # as another user is trying to register with same username
                         # only affects one row since username is key so no need for serializable
-                        deletecursor.execute("set session transaction isolation level repeatable read")
+                        deletecursor.execute("set session transaction isolation level serializable")
                         query = "DELETE FROM user WHERE username = %s and monthly_budget = %s"
                         deletecursor.execute(query, (username, budget,))
                         cnx.commit()
@@ -132,9 +132,11 @@ def paymentmethod():
         # (i.e. if register() has inserted a new user but not yet committed)
         # assuming only one instance per username so no need for repeatable read
         checkcursor.execute("set session transaction isolation level read committed")
-        query = "SELECT * FROM payment WHERE username = %s"
-        checkcursor.execute(query, (username,))
-        payment = checkcursor.fetchone()
+        checkcursor.callproc('getPaymentFromUsername', [username])
+        payment = None
+        for result in checkcursor.stored_results():
+            payment = result.fetchone()
+
         checkcursor.close()
 
         if payment:
@@ -152,9 +154,11 @@ def paymentmethod():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             cursor.execute("set session transaction isolation level read committed")
-            query = "SELECT * FROM payment WHERE username = %s"
-            cursor.execute(query, (username,))
-            account = cursor.fetchone()
+            cursor.callproc('getPaymentFromUsername', [username])
+            account = None
+            for result in cursor.stored_results():
+                account = result.fetchone()
+
             cursor.close()
             if account:
                 # TODO: account can only have one payment method ???
@@ -233,23 +237,25 @@ def purchase():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             cartcursor.execute("set session transaction isolation level read committed")
-            cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
-            cartcursor.execute(cartquery, (session['username'],))
-
+            cartcursor.callproc('getCartFromUsername', [session['username']])
             carttable = ""
             count = 0 
-            for (item, price, quantity) in cartcursor:
-                if count == 0:
-                    carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
-                    count = count + 1
 
-                carttable += "<tr><td>%s</td>" % item
-                carttable += "<td>%s</td>" % price
-                carttable += "<td>%s</td>" % quantity
-                carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-
-                carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+            for result in cartcursor.stored_results():
+                list = result.fetchall()
             
+                for (item, price, quantity) in list:
+                    if count == 0:
+                        carttable = "<table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr>"
+                        count = count + 1
+
+                    carttable += "<tr><td>%s</td>" % item
+                    carttable += "<td>%s</td>" % price
+                    carttable += "<td>%s</td>" % quantity
+                    carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+
+                    carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+                
             if count == 0:  # no items in cart
                 carttable = '''<p class="worddark">Please add items to the shopping cart before proceeding to checkout.</p></br></br>'''
             else:
@@ -265,9 +271,10 @@ def purchase():
             # (i.e. if register() has inserted a new user but not yet committed)
             # assuming only one instance per username so no need for repeatable read
             paymentcursor.execute("set session transaction isolation level read committed")
-            paymentquery = "SELECT * FROM payment WHERE username = %s"
-            paymentcursor.execute(paymentquery, (session['username'],))
-            payment = paymentcursor.fetchone()
+            paymentcursor.callproc('getPaymentFromUsername', [session['username']])
+            payment = None
+            for result in paymentcursor.stored_results():
+                payment = result.fetchone()
             paymentcursor.close()
 
             paymentinfo = ""
@@ -335,18 +342,14 @@ def purchase():
                 item = cursor.callproc('getItemFromName', [name, 0])
                 item_id = item[1]
                 
-                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id, username,))
-                quantity = cursor.fetchone()
-                print(quantity[0])
-                print(request.form)
+                quantityItem = cursor.callproc('getQuantityFromCart', [session['username'], item_id, 0])
+                quantity = quantityItem[1]
+
                 if not request.form['new_quantity'] == '':
                     new_quantity = request.form['new_quantity']
                 else:
-                    new_quantity = quantity[0]
-                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                cursor.execute(
-                    updateQuantity, (new_quantity, item_id, username, ))
+                    new_quantity = quantity
+                cursor.callproc('updateCartQuantity', [username, item_id, new_quantity])
                 cursor.close()
                 cnx.commit()
                 showCart()
@@ -422,17 +425,18 @@ def showCart():
     # serializable b/c select affects multiple rows and do not want another
     # transaction to insert into shopping cart until this action is done
     cartcursor.execute("set session transaction isolation level serializable")
-    cartquery = "SELECT i.name, i.price, s.quantity FROM shopping_cart s JOIN item i ON s.item_id = i.item_id WHERE s.username = %s"
-    cartcursor.execute(cartquery, (session['username'],))
+    cartcursor.callproc('getCartFromUsername', [session['username']])
+    count = 0 
 
-    #  cartSnippet = cartcursor.fetchone
+    for result in cartcursor.stored_results():
+        list = result.fetchall()
 
-    for (item, price, quantity) in cartcursor:
-        carttable += "<tr><td>%s</td>" % item
-        carttable += "<td>%s</td>" % price
-        carttable += "<td>%s</td>" % quantity
-        carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
-        carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
+        for (item, price, quantity) in list:
+            carttable += "<tr><td>%s</td>" % item
+            carttable += "<td>%s</td>" % price
+            carttable += "<td>%s</td>" % quantity
+            carttable += '''<td> <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="%s">''' % item
+            carttable += '''<input type="submit" class="btn" value="Remove" name="Remove"><input type="number" name="new_quantity" placeholder="10"><input type="submit" class="btn" value="Change Quantity" name="Change Quantity"></form></td></tr>'''
 
     cartcursor.close()
     carttable += "</table></br>"
@@ -442,9 +446,10 @@ def showCart():
     # read committed b/c do not want to read data that has not been committed
     # assuming only one instance per username so no need for repeatable read
     paymentcursor.execute("set session transaction isolation level read committed")
-    paymentquery = "SELECT * FROM payment WHERE username = %s"
-    paymentcursor.execute(paymentquery, (session['username'],))
-    payment = paymentcursor.fetchone()
+    paymentcursor.callproc('getPaymentFromUsername', [session['username']])
+    payment = None
+    for result in paymentcursor.stored_results():
+        payment = result.fetchone()
     paymentcursor.close()
 
     paymentinfo = '''<table>
@@ -534,17 +539,20 @@ def transferCart(transactionID):
     # repeatable read b/c insert affects multiple rows but phantom data is
     # not a concern since each transaction will have a different id number
     cursor.execute("set session transaction isolation level repeatable read")
-    cartquery = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
-    cursor.execute(cartquery, (session['username'],))
+    cursor.callproc('getCartDetails', [session['username']])
 
-    count = 0
-    insertquery = "INSERT INTO item_transaction VALUES "
-    for (item, quantity) in cursor:
-        if count == 0:
-            insertquery += "(%s, %s, %s)" % (item, transactionID, quantity)
-            count += 1
-        else:
-            insertquery += ", (%s, %s, %s)" % (item, transactionID, quantity)
+    insertquery = ""
+    for result in cursor.stored_results():
+        list = result.fetchall()
+
+        count = 0
+        insertquery += "INSERT INTO item_transaction VALUES "
+        for (item, quantity) in list:
+            if count == 0:
+                insertquery += "(%s, %s, %s)" % (item, transactionID, quantity)
+                count += 1
+            else:
+                insertquery += ", (%s, %s, %s)" % (item, transactionID, quantity)
 
     # insert items into item_transaction relation
     cursor.execute(insertquery)
@@ -662,7 +670,7 @@ def register():
             msg = 'Username already exists.'
         else:
             insertcursor = cnx.cursor(buffered=True)
-            insertcursor.execute("set session transaction isolation level repeatable read")
+            insertcursor.execute("set session transaction isolation level serializable")
             query = "INSERT INTO user VALUES (%s, %s)"
             insertcursor.execute(query, (username, budget,))
             cnx.commit()
@@ -739,13 +747,13 @@ def shop():
                 print("item is in shopping cart")
 
                 item = cursor.fetchone()
-                getQuantity = "SELECT quantity FROM shopping_cart WHERE item_id = %s AND username = %s"
-                cursor.execute(getQuantity, (item_id[0], username,))
-                quantity = cursor.fetchone()
-                print(quantity[0])
-                updateQuantity = "UPDATE shopping_cart SET quantity=%s WHERE item_id = %s AND username = %s"
-                cursor.execute(
-                    updateQuantity, (quantity[0]+1, item_id[0], username, ))
+                quantityItem = cursor.callproc('getQuantityFromCart', [username, item_id[0], 0])
+                print(quantityItem)
+                quantity = quantityItem[2]
+
+                print(quantity)
+                cursor.callproc('updateCartQuantity', [username, item_id[0], quantity + 1])
+                #TODO will always add 1 even if quantity to add is not equal to 1
             print("msg")
             
             print(msg)
@@ -762,15 +770,18 @@ def cart_total():
     total = 0
     cursor = cnx.cursor(buffered=True)
     cursor.execute("set session transaction isolation level read committed")
-    find_id_and_quantity = "SELECT item_id, quantity FROM shopping_cart WHERE username = %s"
-    cursor.execute(find_id_and_quantity, (session['username'],))
+    cursor.callproc('getCartDetails', [session['username']])
 
-    for (item_id, quantity) in cursor:
-        # for all items, add price * quantity to total
-        find_price = "SELECT price FROM item WHERE item_id = %s"
-        cursor.execute(find_price, (item_id,))
-        price = cursor.fetchone()[0]
-        total += price * quantity
+    insertquery = ""
+    for result in cursor.stored_results():
+        list = result.fetchall()
+
+        for (item_id, quantity) in list:
+            # for all items, add price * quantity to total
+            find_price = "SELECT price FROM item WHERE item_id = %s"
+            cursor.execute(find_price, (item_id,))
+            price = cursor.fetchone()[0]
+            total += price * quantity
     print(total)
     cursor.close()
     return total
@@ -780,10 +791,10 @@ def compute_remaining_budget(cart_total):
     # find budget
     cursor = cnx.cursor(buffered=True)
     cursor.execute("set session transaction isolation level read committed")
-    find_budget = "SELECT monthly_budget FROM user WHERE username = %s"
-    cursor.execute(find_budget, (session['username'],))
-    budget = cursor.fetchone()[0]
-    print(budget)
+
+    item = cursor.callproc('getBudgetFromUsername', [session['username'], 0])
+    budget = item[1]
+
     remaining_budget = budget - cart_total
     print(remaining_budget)
     cursor.close()
@@ -816,11 +827,9 @@ def budget():
             # 1. Get budget
             cursor = cnx.cursor(buffered=True)
             cursor.execute("set session transaction isolation level serializable")
-            getBudget = "SELECT monthly_budget FROM user WHERE username = %s"
-            cursor.execute(getBudget, (username,))
-            budget = cursor.fetchone()
-            budget = budget[0]
-            print(budget)
+
+            item = cursor.callproc('getBudgetFromUsername', [session['username'], 0])
+            budget = item[1]
             add_to_budget = request.form['add_to_budget_i']
 
             changeBudget = "UPDATE user SET monthly_budget = %s WHERE username = %s"
