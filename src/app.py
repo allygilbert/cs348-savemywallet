@@ -1004,8 +1004,8 @@ def admin():
                     </ul>
                                         </div>
                                         <div class="content" align="center">
-                                            <div class="header">
-                                                <h1>Purchase Cart</h1>
+                                            <div class="header"s>
+                                                <h1>Admin</h1>
                                             </div></br></br>
                                             <div class="contentbar">
                                                 <form action="{{ url_for('admin')}}" method="post" autocomplete="off">
