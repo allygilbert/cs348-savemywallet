@@ -1,14 +1,14 @@
 <html lang="en">
-                                <head>
-                                    <title> purchase </title>
-                                    <link rel="stylesheet" href="../static/style.css">
-                                </head>
-                                <body>
-                                    <div class="one">
-                                        <div class="sidebar">
-                                            <h1>Menu</h1>
-                    <ul>
-                     <li><a href="{{url_for('shop')}}">Shop</a></li>
+                            <head>
+                                <title> purchase </title>
+                                <link rel="stylesheet" href="../static/style.css">
+                            </head>
+                            <body>
+                                <div class="one">
+                                    <div class="sidebar">
+                                        <h1>Menu</h1>
+                                    <ul>
+                  <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
                 <li><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
@@ -16,18 +16,18 @@
                 <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
-                    </ul>
-                                        </div>
-                                        <div class="content" align="center">
-                                            <div class="header">
-                                                <h1>Purchase Cart</h1>
-                                            </div></br></br>
-                                            <div class="contentbar">
-                                                <form action="{{ url_for('admin')}}" method="post" autocomplete="off">
-                                                <div class="msg">{{ msg }}</div>
-                                                <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr><tr><td>banana</td><td>0.70</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="banana"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Apple</td><td>1.00</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Apple"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Tomato</td><td>0.30</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr></table></br>
-                                </div>
+                </ul>
+                                    </div>
+                                    <div class="content" align="center">
+                                        <div class="header">
+                                            <h1>Purchase Cart</h1>
+                                        </div></br></br>
+                                        <div class="contentbar">
+                                            <form action="{{ url_for('admin')}}" method="post" autocomplete="off">
+                                            <div class="msg">{{ msg }}</div>
+                                            <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Edit</td></tr><tr><td>banana</td><td>1.00</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="banana"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Apple</td><td>70.00</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Apple"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr><tr><td>Tomato</td><td>0.30</td><td> <form action="{{ url_for('admin')}}" method="post" autocomplete="off">                   <input type="hidden" name="item_name" value="Tomato"><input type="number" name="new_price" step="0.01" placeholder="2.99"></td><td><input type="submit" class="btn" value="Change Price" name="Change Price"></td></form></tr></table></br>
                             </div>
                         </div>
-                    </body>
-                </html>
+                    </div>
+                </body>
+            </html>

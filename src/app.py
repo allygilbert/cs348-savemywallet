@@ -749,10 +749,10 @@ def shop():
                 item = cursor.fetchone()
                 quantityItem = cursor.callproc('getQuantityFromCart', [username, item_id[0], 0])
                 print(quantityItem)
-                quantity = quantityItem[2]
+                prev_quantity = quantityItem[2]
 
                 print(quantity)
-                cursor.callproc('updateCartQuantity', [username, item_id[0], quantity + 1])
+                cursor.callproc('updateCartQuantity', [username, item_id[0], prev_quantity + int(quantity)])
                 #TODO will always add 1 even if quantity to add is not equal to 1
             print("msg")
             
@@ -808,6 +808,7 @@ def budget():
         c_total = cart_total()
         print(c_total)
         remaining_budget = compute_remaining_budget(c_total)
+        showBudget()
     if request.method == 'POST':
         print(request.form)
         if 'change_budget' in request.form:

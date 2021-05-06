@@ -7,8 +7,8 @@
                                 <div class="one">
                                     <div class="sidebar">
                                         <h1>Menu</h1>
-                                        <ul>
-                                             <li><a href="{{url_for('shop')}}">Shop</a></li>
+                                       <ul>
+             <li><a href="{{url_for('shop')}}">Shop</a></li>
                 <li><a href="{{url_for('paymentmethod')}}">Payment Method</a></li>
                 <li><a href="{{url_for('budget')}}">Budget</a></li>
                 <li class="active"><a href="{{url_for('purchase')}}">Purchase Cart</a></li>
@@ -16,7 +16,7 @@
                 <li><a href="{{url_for('transaction_history')}}">Transaction History</a></li>
                 <li><a href="{{url_for('delete')}}">Delete Account</a></li>
                 <li><a href="{{url_for('logout')}}">Logout</a></li>
-                                        </ul> 
+                </ul>
                                     </div>
                                     <div class="content" align="center">
                                         <div class="header">
@@ -25,20 +25,20 @@
                                         <div class="contentbar">
                                             <form action="{{ url_for('purchase')}}" method="post" autocomplete="off">
                                             <div class="msg">{{ msg }}</div>
-                                            <h1>Cart Contents</h1></br><p class="worddark">Please add items to the shopping cart before proceeding to checkout.</p></br></br><h1>Payment Method</h1></br><table>
-                                    <tr>
-                                        <td class='worddark'>Card Number</td>
-                                        <td>54321</td>
-                                    </tr>
-                                    <tr>
-                                        <td class='worddark'>Name on Card</td>
-                                        <td>helloworld</td>
-                                    </tr>
-                                    <tr>
-                                        <td class='worddark'>Expiration Date</td>
-                                        <td>hhihi</td>
-                                    </tr>
-                                </table></br><input type="submit" class="btn" name="purchase" value="Place Order">
+                                            <h1>Cart Contents</h1></br><table><tr class='worddark'><td>Item</td><td>Price</td><td>Quantity</td></tr></table></br><h1>Payment Method</h1></br><table>
+                        <tr>
+                            <td class='worddark'>Card Number</td>
+                            <td>5454</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Name on Card</td>
+                            <td>star</td>
+                        </tr>
+                        <tr>
+                            <td class='worddark'>Expiration Date</td>
+                            <td>star</td>
+                        </tr>
+                    </table></br><input type="submit" class="btn" name="purchase" value="Place Order">
                             </div>
                         </div>
                     </div>
